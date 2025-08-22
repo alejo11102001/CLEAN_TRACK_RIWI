@@ -1,0 +1,128 @@
+/* --- Variables de Color y Tipografía (Estilo RIWI Mejorado) --- */
+:root {
+    --riwi-dark-blue: #0A0E29;
+    --riwi-green: #94C11F;
+    --riwi-accent-pink: #E6007E;
+    --riwi-accent-yellow: #FFD100;
+    --background-color: #f0f2f5;
+    --text-color: #343a40;
+    --primary-font: 'Manrope', sans-serif;
+}
+
+/* --- Estilos Generales --- */
+body {
+    background-color: var(--background-color);
+    font-family: var(--primary-font);
+    color: var(--text-color);
+}
+
+/* --- Barra Lateral (Sidebar) --- */
+.sidebar {
+    width: 280px;
+    background-color: var(--riwi-dark-blue);
+    min-height: 100vh;
+}
+
+.sidebar hr {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.7); /* Texto ligeramente más sutil */
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+/* Estilo para el link activo, ¡más vibrante! */
+.sidebar .nav-link.active {
+    background-color: var(--riwi-green);
+    color: var(--riwi-dark-blue) !important;
+    font-weight: 700;
+}
+
+.sidebar .dropdown-toggle {
+    font-weight: 500;
+    color: white !important;
+}
+
+.sidebar .dropdown-menu {
+    background-color: #1a1f4a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.sidebar .dropdown-item {
+    color: rgba(255, 255, 255, 0.7);
+}
+.sidebar .dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+
+/* --- Contenido Principal --- */
+.main-content {
+    flex-grow: 1;
+    background-color: var(--background-color);
+}
+
+.main-content .h2 {
+    color: var(--riwi-dark-blue);
+}
+
+/* --- Botones Personalizados (Paleta Riwi) --- */
+/* Botón primario ahora es VERDE */
+.btn-riwi-primary {
+    background-color: var(--riwi-green);
+    color: var(--riwi-dark-blue);
+    font-weight: 700;
+    border: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-riwi-primary:hover {
+    background-color: #82a81b; /* Verde más oscuro */
+    color: var(--riwi-dark-blue);
+    transform: translateY(-2px);
+}
+
+
+/* --- Estilos de la tabla --- */
+.card {
+    border: none;
+    border-radius: 0.75rem;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    font-weight: 700;
+    color: var(--riwi-dark-blue);
+    border-bottom-width: 2px;
+}
+
+/* Botones de acciones dentro de la tabla con colores de marca */
+.table .btn-outline-success {
+    border-color: var(--riwi-green);
+    color: var(--riwi-green);
+}
+.table .btn-outline-success:hover {
+    background-color: var(--riwi-green);
+    color: var(--riwi-dark-blue);
+}
+
+.table .btn-outline-secondary {
+    border-color: var(--riwi-dark-blue);
+    color: var(--riwi-dark-blue);
+}
+.table .btn-outline-secondary:hover {
+    background-color: var(--riwi-dark-blue);
+    color: white;
+}
