@@ -110,3 +110,4 @@ body {
 .divider-text:not(:empty)::after {
     margin-left: .5em;
 }
+

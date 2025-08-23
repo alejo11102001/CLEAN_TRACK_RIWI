@@ -126,3 +126,48 @@ body {
     background-color: var(--riwi-dark-blue);
     color: white;
 }
+
+.main-content {
+    position: relative; /* Necesario para posicionar el loader dentro */
+}
+
+#loader-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(240, 242, 245, 0.8); /* Fondo semi-transparente */
+    display: none; /* Oculto por defecto */
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 1000;
+    transition: opacity 0.3s ease;
+}
+
+.loader-logo {
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+#loader-wrapper p {
+    margin-top: 1rem;
+    font-weight: 500;
+    color: var(--riwi-dark-blue);
+}
+
+/* Animación de pulso para el logo */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+}
