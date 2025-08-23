@@ -27,15 +27,18 @@ body {
 }
 
 .logo-img {
-    max-width: 200px;
-    margin: 0;
+    max-width: 150px;
+}
+
+/* --- Clases de Utilidad --- */
+.text-riwi-green {
+    color: var(--riwi-green);
 }
 
 /* --- Estilos de Formularios Flotantes de Bootstrap --- */
 .form-floating > .form-control {
-    height: calc(1rem + 2px);
+    height: calc(3.5rem + 2px);
     padding: 1rem;
-    margin: 0;
 }
 .form-floating > label {
     padding: 1rem;
