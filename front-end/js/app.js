@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div id="zonas-grid-container" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4"><div class="col"><p class="text-center text-muted">No hay zonas definidas.</p></div></div>
         `,
         // ========== VISTA USUARIOS ==========
-        user: `
+        users: `
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h2 fw-bold">Gestión de Usuarios</h1>
                 <!-- BOTÓN MODIFICADO PARA ABRIR EL MODAL -->
