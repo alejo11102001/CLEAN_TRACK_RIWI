@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="./css/zonas_employee.css">
 </head>
 <body>
+
     <header class="navbar navbar-dark shadow-sm header-riwi">
         <div class="container-fluid"><a class="navbar-brand fw-bold d-flex align-items-center" href="#"><img src="https://riwi.io/wp-content/uploads/2023/07/Fondo-oscuro-1.png" alt="RIWI Logo" width="80" class="me-2"><span>CleanTrack</span></a><div class="dropdown"><a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-person-circle me-2 fs-4"></i><strong>Ana Pérez</strong></a><ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"><li><a class="dropdown-item" href="#">Cerrar Sesión</a></li></ul></div></div>
     </header>
@@ -27,31 +28,25 @@
     <div class="modal fade" id="registroLimpiezaModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
+                <div class="modal-loader-overlay" id="modalLoader"> </div>
                 <div class="modal-header">
                     <h5 class="modal-title h5 fw-bold" id="modalLabel">Registro: <span class="text-success" id="modalZoneTitle"></span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    
-                    <div id="qr-scanner-container">
-                        <p class="text-center text-muted">Para confirmar la zona, presiona el botón y escanea el código QR.</p>
-                        <div id="qr-reader" class="mb-3"></div>
-                        <div class="d-grid">
-                            <button type="button" id="start-scan-btn" class="btn btn-dark"><i class="bi bi-camera-video me-2"></i> Iniciar Escáner</button>
+                    <form id="formRegistroLimpieza">
+                        <div class="mb-4"><label class="form-label fw-bold">Tipo de Limpieza</label><div class="btn-group w-100" role="group"><input type="radio" class="btn-check" name="cleaningType" id="type1" autocomplete="off" checked><label class="btn btn-outline-primary" for="type1">Primera Vez</label><input type="radio" class="btn-check" name="cleaningType" id="type2" autocomplete="off"><label class="btn btn-outline-primary" for="type2">Repaso</label></div></div>
+                        <div class="mb-4"><label for="observations" class="form-label fw-bold">Observaciones</label><textarea class="form-control" id="observations" rows="3" placeholder="(Opcional)"></textarea></div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Evidencia Fotográfica</label>
+                            <input class="d-none" type="file" id="evidence" accept="image/*" capture="environment" required>
+                            <button type="button" id="tomar-foto-btn" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-camera-fill me-2"></i> Tomar Foto de Evidencia
+                            </button>
+                            <img id="foto-preview" class="img-fluid rounded mt-3 d-none" alt="Vista previa de la evidencia">
                         </div>
-                    </div>
-
-                    <div id="registration-form-container" class="d-none">
-                        <div class="alert alert-success d-flex align-items-center" role="alert">
-                        <i class="bi bi-patch-check-fill me-2"></i>
-                        <div>¡QR de zona verificado correctamente!</div>
-                        </div>
-                        <form id="formRegistroLimpieza">
-                            <div class="mb-4"><label class="form-label fw-bold">Tipo de Limpieza</label><div class="btn-group w-100" role="group"><input type="radio" class="btn-check" name="cleaningType" id="type1" autocomplete="off" checked><label class="btn btn-outline-primary" for="type1">Primera Vez</label><input type="radio" class="btn-check" name="cleaningType" id="type2" autocomplete="off"><label class="btn btn-outline-primary" for="type2">Repaso</label></div></div>
-                            <div class="mb-4"><label for="observations" class="form-label fw-bold">Observaciones</label><textarea class="form-control" id="observations" rows="3" placeholder="(Opcional)"></textarea></div>
-                            <div class="mb-4"><label for="evidence" class="form-label fw-bold">Evidencia Fotográfica</label><input class="form-control" type="file" id="evidence" accept="image/*" capture="environment" required></div>
-                        </form>
-                    </div>
+                    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -64,7 +59,6 @@
     <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="./js/zones_employee.js"></script>
 </body>
 </html>
