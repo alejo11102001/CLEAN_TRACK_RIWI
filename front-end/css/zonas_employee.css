@@ -60,7 +60,20 @@
     color: var(--riwi-dark-blue);
 }
 
-/* Vista de carga */ 
+#qr-reader {
+    width: 100%;
+    border: 2px dashed #ccc;
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+#foto-preview {
+    border: 2px solid #e0e0e0;
+    max-height: 250px;
+    object-fit: cover;
+}
+
+/* --- ESTILOS PARA LA VISTA DE CARGA EN EL MODAL --- */
 
 .modal-content {
     position: relative; /* Necesario para el overlay */
@@ -90,25 +103,6 @@
 
 .loader-logo {
     animation: bounce 2s infinite ease-in-out;
-}
-
-/* ... tu CSS existente ... */
-
-/* ==========================================================
-   NUEVOS ESTILOS PARA ESCÁNER Y VISTA PREVIA (AÑADIR ESTO)
-   ========================================================== */
-
-#qr-reader {
-    width: 100%;
-    border: 2px dashed #ccc;
-    border-radius: 0.75rem;
-    overflow: hidden;
-}
-
-#foto-preview {
-    border: 2px solid #e0e0e0;
-    max-height: 250px;
-    object-fit: cover;
 }
 
 /* Animación para el logo */
