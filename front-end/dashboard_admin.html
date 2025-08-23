@@ -160,9 +160,25 @@
                             <input type="text" class="form-control" id="nombreZona" placeholder="Nombre de la zona" required>
                             <label for="nombreZona">Nombre de la zona (Ej: Baño Hombres P1)</label>
                         </div>
-                        <div class="form-floating">
+
+                        <div class="form-floating mb-3">
+                            <input type="number" class="form-control" id="pisoZona" placeholder="Piso" required>
+                            <label for="pisoZona">Piso</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="qrIdentifier" placeholder="Identificador QR" required>
+                            <label for="qrIdentifier">Identificador para QR (Ej: ZONA-01-PISO1)</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
                             <textarea class="form-control" placeholder="Añade una descripción" id="descripcionZona" style="height: 100px"></textarea>
                             <label for="descripcionZona">Descripción (opcional)</label>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="fotoZona" class="form-label">Foto de referencia (opcional)</label>
+                            <input class="form-control" type="file" id="fotoZona" accept="image/*">
                         </div>
                     </form>
                 </div>
