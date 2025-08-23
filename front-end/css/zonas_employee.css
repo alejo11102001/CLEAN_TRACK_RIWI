@@ -73,12 +73,6 @@
 }
 
 
-#foto-preview {
-    border: 2px solid #e0e0e0;
-    max-height: 250px; 
-    object-fit: cover; 
-}
-
 /* Vista de carga */ 
 
 .modal-content {
