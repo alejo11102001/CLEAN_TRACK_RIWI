@@ -19,7 +19,7 @@
     <div class="d-flex">
         <div class="sidebar d-flex flex-column p-3">
             <a href="#" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-                <img src="./img/logo_dahsboard.png" alt="RIWI Logo" width="100">
+                <img src="./img/logo_white.png" alt="RIWI Logo" width="100">
             </a>
             <hr>
             <ul class="nav nav-pills flex-column mb-auto">
@@ -29,38 +29,34 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="nav-link text-white" data-view="registros">
+                    <a href="#" class="nav-link text-white" data-view="register">
                         <i class="bi bi-card-checklist me-2"></i> Registros
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="nav-link text-white" data-view="zonas">
+                    <a href="#" class="nav-link text-white" data-view="zones">
                         <i class="bi bi-geo-alt me-2"></i> Zonas
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="nav-link text-white" data-view="usuarios">
+                    <a href="#" class="nav-link text-white" data-view="users">
                         <i class="bi bi-people me-2"></i> Usuarios
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-white" data-view="allocations">
+                        <i class="bi bi-person-check me-2"></i> Asignaciones
+                    </a>
+                </li>
                 <li>
-                    <a href="#" class="nav-link text-white" data-view="reportes">
+                    <a href="#" class="nav-link text-white" data-view="reports">
                         <i class="bi bi-file-earmark-bar-graph me-2"></i> Reportes
                     </a>
                 </li>
             </ul>
             <hr>
             <div class="dropdown">
-                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-person-circle me-2 fs-4"></i>
-                    <strong>Admin Master</strong>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
-                    <li><a class="dropdown-item" href="#">Mi Perfil</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#">Cerrar Sesión</a></li>
-                </ul>
-            </div>
+                </div>
         </div>
 
         <main id="main-content" class="main-content p-4">
@@ -70,121 +66,40 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="./js/app.js"></script>
 
-    <div class="modal fade" id="modalNuevoUsuario" tabindex="-1" aria-labelledby="modalNuevoUsuarioLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalNuevoUsuarioLabel">Crear Nuevo Usuario</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formNuevoUsuario">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-floating mb-3">
-                                <input type="text" class="form-control" id="nombreUsuario" placeholder="Nombre(s)" required>
-                                <label for="nombreUsuario">Nombre(s)</label>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-floating mb-3">
-                                <input type="text" class="form-control" id="apellidoUsuario" placeholder="Apellido(s)" required>
-                                <label for="apellidoUsuario">Apellido(s)</label>
-                            </div>
-                        </div>
-                    </div>
+    <div class="modal fade" id="modalNuevoUsuario"></div>
+    <div class="modal fade" id="modalNuevaZona"></div>
 
-                    <div class="form-floating mb-3">
-                        <input type="text" class="form-control" id="codigoUsuario" placeholder="Código de Usuario" required>
-                        <label for="codigoUsuario">Código de Usuario</label>
-                    </div>
-                    
-                    <div class="form-floating mb-3">
-                        <input type="email" class="form-control" id="emailUsuario" placeholder="Correo electrónico" required>
-                        <label for="emailUsuario">Correo electrónico</label>
-                    </div>
-                    
-                    <div class="form-floating mb-3">
-                        <select class="form-select" id="horarioUsuario" required>
-                        <option selected disabled value="">Seleccionar horario...</option>
-                        <option value="1">6am a 3pm</option>
-                        <option value="2">7am a 4pm</option>
-                        <option value="3">11am a 8pm</option>
-                        </select>
-                        <label for="horarioUsuario">Selección de horario</label>
-                    </div>
-                    
-                    <div class="form-floating mb-3">
-                        <select class="form-select" id="zonaUsuario" required>
-                        <option selected disabled value="">Seleccionar zona...</option>
-                        <option value="baños">Baños</option>
-                        <option value="gradas">Gradas</option>
-                        <option value="salones">Salones</option>
-                        </select>
-                        <label for="zonaUsuario">Asignación de zona</label>
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <select class="form-select" id="rolUsuario">
-                        <option selected>Seleccionar rol...</option>
-                        <option value="empleado">Empleado</option>
-                        <option value="admin">Admin</option>
-                        </select>
-                        <label for="rolUsuario">Rol</label>
-                    </div>
-                    
-                    <div class="form-floating mb-3">
-                        <input type="password" class="form-control" id="passwordUsuario" placeholder="Contraseña temporal" required>
-                        <label for="passwordUsuario">Contraseña temporal</label>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" form="formNuevoUsuario" class="btn btn-riwi-primary">Guardar Usuario</button>
-            </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalNuevaZona" tabindex="-1" aria-labelledby="modalNuevaZonaLabel" aria-hidden="true">
+    <div class="modal fade" id="modalNuevaAsignacion" tabindex="-1" aria-labelledby="modalNuevaAsignacionLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalNuevaZonaLabel">Crear Nueva Zona</h5>
+                    <h5 class="modal-title" id="modalNuevaAsignacionLabel">Crear Nueva Asignación</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formNuevaZona">
+                    <form id="formNuevaAsignacion">
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="nombreZona" placeholder="Nombre de la zona" required>
-                            <label for="nombreZona">Nombre de la zona (Ej: Baño Hombres P1)</label>
+                            <select class="form-select" id="asignacionUsuario" required>
+                            <option selected disabled value="">Seleccionar usuario...</option>
+                            <option value="1">Ana Pérez</option>
+                            <option value="2">Carlos Ruiz</option>
+                            </select>
+                            <label for="asignacionUsuario">Usuario a asignar</label>
                         </div>
-
                         <div class="form-floating mb-3">
-                            <input type="number" class="form-control" id="pisoZona" placeholder="Piso" required>
-                            <label for="pisoZona">Piso</label>
-                        </div>
-
-                        <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="qrIdentifier" placeholder="Identificador QR" required>
-                            <label for="qrIdentifier">Identificador para QR (Ej: ZONA-01-PISO1)</label>
-                        </div>
-
-                        <div class="form-floating mb-3">
-                            <textarea class="form-control" placeholder="Añade una descripción" id="descripcionZona" style="height: 100px"></textarea>
-                            <label for="descripcionZona">Descripción (opcional)</label>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="fotoZona" class="form-label">Foto de referencia (opcional)</label>
-                            <input class="form-control" type="file" id="fotoZona" accept="image/*">
+                            <select class="form-select" id="asignacionZona" required>
+                            <option selected disabled value="">Seleccionar zona...</option>
+                            <option value="1">Baños Piso 1</option>
+                            <option value="2">Gradas Sector A</option>
+                            <option value="3">Salones Bloque 3</option>
+                            </select>
+                            <label for="asignacionZona">Zona a asignar</label>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" form="formNuevaZona" class="btn btn-riwi-primary">Guardar Zona</button>
+                    <button type="submit" form="formNuevaAsignacion" class="btn btn-riwi-primary">Guardar Asignación</button>
                 </div>
             </div>
         </div>
