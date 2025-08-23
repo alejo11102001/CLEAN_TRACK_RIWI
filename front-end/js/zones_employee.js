@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const successToastEl = document.getElementById('successToast');
     const successToast = successToastEl ? new bootstrap.Toast(successToastEl) : null;
     
-    // Elementos del flujo de registro
+    // Flujo de registro
     const qrScannerView = document.getElementById('qr-scanner-view');
     const registrationFormView = document.getElementById('registration-form-view');
     const startScanBtn = document.getElementById('start-scan-btn');
@@ -19,10 +19,9 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentZoneCardId = '';
     let html5QrCode = null;
 
-    // --- LÓGICA DEL ESCÁNER QR ---
+    // ---ESCÁNER QR ---
     function onScanSuccess(decodedText, decodedResult) {
         console.log(`Código QR leído: ${decodedText}`);
-        // Aquí puedes añadir una verificación del decodedText contra currentZoneName si lo necesitas
         
         html5QrCode.stop().then(() => {
             qrScannerView.classList.add('d-none'); // Oculta el escáner
@@ -40,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .catch(err => alert("Error al iniciar la cámara. Asegúrate de dar los permisos necesarios."));
     });
 
-    // --- LÓGICA PARA TOMAR FOTO ---
+    // ---TOMAR FOTO ---
     tomarFotoBtn.addEventListener('click', () => evidenceInput.click());
 
     evidenceInput.addEventListener('change', function(event) {
@@ -55,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // --- LÓGICA DEL MODAL Y FORMULARIO ---
+    // --- MODAL Y FORMULARIO ---
     registroLimpiezaModal.addEventListener('show.bs.modal', function (event) {
         const button = event.relatedTarget;
         currentZoneName = button.getAttribute('data-zone-name');
@@ -69,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
         startScanBtn.textContent = "Iniciar Escáner";
         startScanBtn.disabled = false;
         qrReader.innerHTML = "";
-        saveBtn.disabled = true; // Deshabilita el botón de guardar al inicio
+        saveBtn.disabled = true; 
         modalForm.reset();
         fotoPreview.classList.add('d-none');
         modalLoader.style.display = 'none';
