@@ -30,6 +30,10 @@ body {
     max-width: 150px;
 }
 
+.icon-large {
+    font-size: 3rem; /* tamaño de ícono */
+}
+
 /* --- Clases de Utilidad --- */
 .text-riwi-green {
     color: var(--riwi-green);
