@@ -126,6 +126,52 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title h5 fw-bold" id="profileModalLabel">Mi Perfil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <img src="https://via.placeholder.com/120" alt="Foto de Perfil" class="rounded-circle mb-2" id="profilePicturePreview" style="width: 120px; height: 120px; object-fit: cover; cursor: pointer;" onclick="document.getElementById('profilePictureInput').click();">
+                        <input type="file" id="profilePictureInput" class="d-none" accept="image/*">
+                        <div>
+                           <label for="profilePictureInput" class="btn btn-sm btn-link text-decoration-none" style="cursor: pointer;">Cambiar foto</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="profileName" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="profileName" value="Ana Pérez" readonly disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="profileEmail" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="profileEmail" value="ana.perez@example.com" readonly disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="profileCode" class="form-label">Código de Empleado</label>
+                        <input type="text" class="form-control" id="profileCode" value="CLEAN-001" readonly disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="profileSchedule" class="form-label">Jornada Laboral</label>
+                        <input type="text" class="form-control" id="profileSchedule" value="6am - 3pm" readonly disabled>
+                    </div>
+                    <hr class="my-4">
+                    <div class="d-grid">
+                        <button type="submit" form="formNuevoUsuario" class="btn btn-riwi-primary" id="changePasswordBtn">
+                            <i class="bi bi-key-fill me-1"></i>
+                            Cambiar Contraseña
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
         <div id="successToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
