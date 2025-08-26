@@ -192,7 +192,8 @@ async function renderZones() {
                             <small class="text-muted">ID QR: ${zone.qr_identifier}</small>
                         </div>
                         <div class="card-footer text-end">
-                            <button class="btn btn-sm btn-outline-primary">Editar</button>
+                            <button class="btn btn-sm btn-outline-primary edit-zone-btn" data-zone-id="${zone.id}">Editar</button>
+                            <button class="btn btn-sm btn-outline-danger delete-zone-btn" data-zone-id="${zone.id}">Eliminar</button>
                         </div>
                     </div>
                 </div>
@@ -219,7 +220,14 @@ async function renderUsers() {
                     <td>${user.names} ${user.lastnames}</td>
                     <td>${user.email}</td>
                     <td><span class="badge bg-success">${user.rol}</span></td>
-                    <td class="text-end"><button class="btn btn-sm btn-outline-primary">Editar</button></td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary edit-user-btn" data-user-id="${user.id}">
+                            Editar
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger delete-user-btn" data-user-id="${user.id}">
+                            Eliminar
+                        </button>
+                    </td>
                 </tr>
             `;
         });
@@ -243,7 +251,10 @@ async function renderAllocations() {
                 <tr>
                     <td>${alloc.employee_name}</td>
                     <td>${alloc.zone_name}</td>
-                    <td class="text-end"><button class="btn btn-sm btn-outline-danger">Eliminar</button></td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary edit-assignment-btn" data-assignment-id="${alloc.id}">Editar</button>
+                        <button class="btn btn-sm btn-outline-danger delete-assignment-btn" data-assignment-id="${alloc.id}">Eliminar</button>
+                    </td>
                 </tr>
             `;
         });
@@ -256,39 +267,29 @@ async function renderAllocations() {
 // 3. LÓGICA PRINCIPAL DE LA APLICACIÓN (SPA)
 // ===================================================================
 document.addEventListener('DOMContentLoaded', () => {
+    // ---- VERIFICACIÓN INICIAL ----
     if (!localStorage.getItem('authToken')) {
-        window.location.href = './index.html'; // Redirige si no hay token
+        window.location.href = './index.html';
         return;
     }
     
     const mainContent = document.getElementById('main-content');
     const navLinks = document.querySelectorAll('.sidebar .nav-link');
 
+    // ---- FUNCIÓN PARA CARGAR VISTAS ----
     function loadView(viewName) {
         mainContent.innerHTML = views[viewName] || '<h2>Contenido no encontrado</h2>';
         
         switch (viewName) {
-            case 'dashboard':
-                renderDashboard();
-                break;
-            case 'register':
-                renderCleaningRecords();
-                break;
-            case 'zones':
-                renderZones();
-                break;
-            case 'users':
-                renderUsers();
-                break;
-            case 'allocations':
-                renderAllocations();
-                break;
-            case 'reports':
-                // Aquí iría la función para renderizar los reportes
-                break;
+            case 'dashboard': renderDashboard(); break;
+            case 'register': renderCleaningRecords(); break;
+            case 'zones': renderZones(); break;
+            case 'users': renderUsers(); break;
+            case 'allocations': renderAllocations(); break;
         }
     }
 
+    // ---- NAVEGACIÓN PRINCIPAL ----
     navLinks.forEach(link => {
         link.addEventListener('click', (event) => {
             event.preventDefault();
@@ -299,161 +300,269 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Cargar la vista inicial por defecto
+    // ---- MANEJADOR UNIFICADO PARA EL FORMULARIO DE USUARIO (CREAR Y EDITAR) ----
+    const handleUserFormSubmit = async (event) => {
+        event.preventDefault();
+        const form = document.getElementById('formNuevoUsuario');
+        const editingId = form.dataset.editingId;
+
+        const userData = {
+            names: document.getElementById('nombreUsuario').value,
+            lastnames: document.getElementById('apellidoUsuario').value,
+            employee_code: document.getElementById('codigoUsuario').value,
+            email: document.getElementById('emailUsuario').value,
+            shift: document.getElementById('horarioUsuario').value,
+            role: document.getElementById('rolUsuario').value,
+        };
+        
+        // Solo añade la contraseña si estamos creando un nuevo usuario
+        if (!editingId) {
+            userData.temporal_password = document.getElementById('passwordUsuario').value;
+        }
+
+        try {
+            if (editingId) {
+                // MODO EDICIÓN (PUT)
+                await request(`/api/admin/users/${editingId}`, 'PUT', userData);
+                Swal.fire('¡Actualizado!', 'El usuario ha sido actualizado.', 'success');
+            } else {
+                // MODO CREACIÓN (POST)
+                await request('/api/admin/create-user', 'POST', userData);
+                Swal.fire('¡Creado!', 'El nuevo usuario ha sido creado.', 'success');
+            }
+            
+            bootstrap.Modal.getInstance(document.getElementById('modalNuevoUsuario')).hide();
+            renderUsers(); // Recargamos la tabla de usuarios
+        } catch (error) {
+            Swal.fire('Error', `No se pudo guardar el usuario: ${error.message}`, 'error');
+        }
+    };
+    
+    // ---- MANEJADOR DE EVENTOS GENERAL PARA CLICS (EVENT DELEGATION) ----
+    document.body.addEventListener('click', async (event) => {
+        const target = event.target.closest('button'); // Busca el botón más cercano al clic
+        if (!target) return; // Si no se hizo clic en un botón, no hagas nada
+
+        // Si se hace clic en el botón de eliminar usuario
+        if (target.matches('.delete-user-btn')) {
+            const userId = target.dataset.userId;
+            Swal.fire({
+                title: '¿Estás seguro?', text: "¡No podrás revertir esto!", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#d33', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, ¡eliminar!'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        await request(`/api/admin/users/${userId}`, 'DELETE');
+                        Swal.fire('¡Eliminado!', 'El usuario ha sido eliminado.', 'success');
+                        renderUsers();
+                    } catch (error) {
+                        Swal.fire('Error', `No se pudo eliminar el usuario: ${error.message}`, 'error');
+                    }
+                }
+            });
+        }
+        
+        // Si se hace clic en el botón de editar usuario
+        if (target.matches('.edit-user-btn')) {
+            const userId = target.dataset.userId;
+            try {
+                const user = await request(`/api/users/${userId}`);
+                
+                document.getElementById('modalNuevoUsuarioLabel').textContent = 'Editar Usuario';
+                document.getElementById('nombreUsuario').value = user.names;
+                document.getElementById('apellidoUsuario').value = user.lastnames;
+                document.getElementById('emailUsuario').value = user.email;
+                document.getElementById('codigoUsuario').value = user.employee_code || '';
+                document.getElementById('horarioUsuario').value = user.shift || '';
+                document.getElementById('rolUsuario').value = user.rol;
+                document.getElementById('formNuevoUsuario').dataset.editingId = userId;
+                
+                document.getElementById('password-field-group').style.display = 'none';
+                
+                new bootstrap.Modal(document.getElementById('modalNuevoUsuario')).show();
+            } catch (error) {
+                Swal.fire('Error', 'No se pudieron cargar los datos del usuario para editar.', 'error');
+            }
+        }
+
+        // --- LÓGICA PARA ZONAS (AÑADIR ESTO) ---
+        if (target.matches('.delete-zone-btn')) {
+            const zoneId = target.dataset.zoneId;
+            Swal.fire({
+                title: '¿Estás seguro de eliminar esta zona?', text: "¡No podrás revertir esto!", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#d33', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, ¡eliminar!'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        await request(`/api/zones/${zoneId}`, 'DELETE');
+                        Swal.fire('¡Eliminada!', 'La zona ha sido eliminada.', 'success');
+                        renderZones();
+                    } catch (error) {
+                        Swal.fire('Error', `No se pudo eliminar la zona: ${error.message}`, 'error');
+                    }
+                }
+            });
+        }
+
+        if (target.matches('.edit-zone-btn')) {
+            const zoneId = target.dataset.zoneId;
+            try {
+                const zone = await request(`/api/zones/${zoneId}`);
+                
+                // Rellenar el modal de zonas
+                document.getElementById('modalNuevaZonaLabel').textContent = 'Editar Zona';
+                document.getElementById('nombreZona').value = zone.name;
+                document.getElementById('pisoZona').value = zone.flats;
+                document.getElementById('qrIdentifier').value = zone.qr_identifier;
+                document.getElementById('descripcionZona').value = zone.description;
+                document.getElementById('formNuevaZona').dataset.editingId = zoneId;
+                
+                new bootstrap.Modal(document.getElementById('modalNuevaZona')).show();
+            } catch (error) {
+                Swal.fire('Error', 'No se pudieron cargar los datos de la zona.', 'error');
+            }
+        }
+            // --- LÓGICA PARA ASIGNACIONES (AÑADIR ESTO) ---
+        if (target.matches('.delete-assignment-btn')) {
+            const assignmentId = target.dataset.assignmentId;
+            Swal.fire({
+                title: '¿Eliminar asignación?', text: 'Esta acción no se puede deshacer.', icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#d33', cancelButtonText: 'Cancelar', confirmButtonText: 'Sí, eliminar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        await request(`/api/assignments/${assignmentId}`, 'DELETE');
+                        Swal.fire('¡Eliminada!', 'La asignación ha sido eliminada.', 'success');
+                        renderAllocations();
+                    } catch (error) {
+                        Swal.fire('Error', `No se pudo eliminar: ${error.message}`, 'error');
+                    }
+                }
+            });
+        }
+
+        if (target.matches('.edit-assignment-btn')) {
+            const assignmentId = target.dataset.assignmentId;
+            try {
+                // 1. Carga los datos de la asignación específica
+                const assignment = await request(`/api/assignments/${assignmentId}`);
+                
+                // 2. Pobla y muestra el modal
+                await populateAssignmentModalDropdowns(assignment.users_id, assignment.zones_id);
+                document.getElementById('modalNuevaAsignacionLabel').textContent = 'Editar Asignación';
+                document.getElementById('formNuevaAsignacion').dataset.editingId = assignmentId;
+                
+                new bootstrap.Modal(document.getElementById('modalNuevaAsignacion')).show();
+            } catch (error) {
+                Swal.fire('Error', 'No se pudieron cargar los datos de la asignación.', 'error');
+            }
+        }
+    });
+
+    // --- CONECTA EL MANEJADOR AL FORMULARIO ---
+    document.getElementById('formNuevoUsuario').addEventListener('submit', handleUserFormSubmit);
+    
+    // --- RESETEA EL MODAL CUANDO SE CIERRA ---
+    document.getElementById('modalNuevoUsuario').addEventListener('hidden.bs.modal', () => {
+        const form = document.getElementById('formNuevoUsuario');
+        form.reset();
+        delete form.dataset.editingId;
+        document.getElementById('modalNuevoUsuarioLabel').textContent = 'Crear Nuevo Usuario';
+        document.getElementById('password-field-group').style.display = 'block';
+    });
+    
+    // --- MANEJADOR UNIFICADO PARA EL SUBMIT DEL FORMULARIO DE ZONA (CREAR Y EDITAR) ---
+    document.getElementById('formNuevaZona').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const editingId = form.dataset.editingId;
+
+        const zoneData = {
+            name: document.getElementById('nombreZona').value,
+            flats: parseInt(document.getElementById('pisoZona').value),
+            qr_identifier: document.getElementById('qrIdentifier').value,
+            description: document.getElementById('descripcionZona').value,
+        };
+
+        try {
+            if (editingId) {
+                await request(`/api/zones/${editingId}`, 'PUT', zoneData);
+                Swal.fire('¡Actualizada!', 'La zona ha sido actualizada.', 'success');
+            } else {
+                await request('/api/zones', 'POST', zoneData);
+                Swal.fire('¡Creada!', 'La nueva zona ha sido creada.', 'success');
+            }
+            bootstrap.Modal.getInstance(document.getElementById('modalNuevaZona')).hide();
+            renderZones();
+        } catch (error) {
+            Swal.fire('Error', `No se pudo guardar la zona: ${error.message}`, 'error');
+        }
+    });
+
+    // --- RESETEAR EL MODAL DE ZONA CUANDO SE CIERRA ---
+    document.getElementById('modalNuevaZona').addEventListener('hidden.bs.modal', () => {
+        const form = document.getElementById('formNuevaZona');
+        form.reset();
+        delete form.dataset.editingId;
+        document.getElementById('modalNuevaZonaLabel').textContent = 'Crear Nueva Zona';
+    });
+
+        // --- LÓGICA PARA POBLAR Y RESETEAR EL MODAL DE ASIGNACIONES ---
+    const modalNuevaAsignacion = document.getElementById('modalNuevaAsignacion');
+    
+    // Función para poblar los selectores del modal de asignaciones
+    const populateAssignmentModalDropdowns = async (selectedUserId = null, selectedZoneId = null) => {
+        const userSelect = document.getElementById('asignacionUsuario');
+        const zoneSelect = document.getElementById('asignacionZona');
+        userSelect.innerHTML = '<option>Cargando usuarios...</option>';
+        zoneSelect.innerHTML = '<option>Cargando zonas...</option>';
+
+        try {
+            const [employees, zones] = await Promise.all([
+                request('/api/employees'),
+                request('/api/zones')
+            ]);
+            userSelect.innerHTML = '<option disabled value="">Seleccionar usuario...</option>';
+            zoneSelect.innerHTML = '<option disabled value="">Seleccionar zona...</option>';
+
+            employees.forEach(employee => {
+                const option = document.createElement('option');
+                option.value = employee.id;
+                option.textContent = `${employee.names} ${employee.lastnames}`;
+                userSelect.appendChild(option);
+            });
+            zones.forEach(zone => {
+                const option = document.createElement('option');
+                option.value = zone.id;
+                option.textContent = zone.name;
+                zoneSelect.appendChild(option);
+            });
+
+            // Si estamos editando, pre-seleccionamos los valores
+            if (selectedUserId) userSelect.value = selectedUserId;
+            if (selectedZoneId) zoneSelect.value = selectedZoneId;
+
+        } catch (error) {
+            console.error('Error al poblar los selectores:', error);
+        }
+    };
+    
+    // Escucha el evento para poblar el modal antes de que se muestre
+    modalNuevaAsignacion.addEventListener('show.bs.modal', () => {
+        // Solo pobla si no estamos editando (en modo edición se llama desde el botón)
+        if (!document.getElementById('formNuevaAsignacion').dataset.editingId) {
+            populateAssignmentModalDropdowns();
+        }
+    });
+
+    // Resetea el modal cuando se cierra
+    modalNuevaAsignacion.addEventListener('hidden.bs.modal', () => {
+        const form = document.getElementById('formNuevaAsignacion');
+        form.reset();
+        delete form.dataset.editingId;
+        document.getElementById('modalNuevaAsignacionLabel').textContent = 'Crear Nueva Asignación';
+    });
+    
+    // --- CARGA INICIAL ---
     loadView('dashboard');
-});
-
-// Lógica para Cerrar Sesión
-logoutButton.addEventListener('click', (event) => {
-    event.preventDefault();
-    localStorage.removeItem('authToken');
-    window.location.href = './index.html';
-});
-
-// --- Lógica para los Formularios de los Modales ---
-
-// Formulario para Crear Nuevo Usuario
-document.getElementById('formNuevoUsuario').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const userData = {
-        names: document.getElementById('nombreUsuario').value,
-        lastnames: document.getElementById('apellidoUsuario').value,
-        employee_code: document.getElementById('codigoUsuario').value,
-        email: document.getElementById('emailUsuario').value,
-        shift: document.getElementById('horarioUsuario').value,
-        role: document.getElementById('rolUsuario').value,
-        temporal_password: document.getElementById('passwordUsuario').value
-    };
-    try {
-        await request('/api/admin/create-user', 'POST', userData);
-        bootstrap.Modal.getInstance(document.getElementById('modalNuevoUsuario')).hide();
-        renderUsers(); // Recarga la tabla de usuarios
-
-        Swal.fire({
-            icon: 'success',
-            title: '¡Creado!',
-            text: 'El nuevo usuario ha sido creado con éxito.',
-            showConfirmButton: false,
-            timer: 1500
-        });
-    } catch (error) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: `Error al crear usuario: ${error.message}`
-        });
-    }
-});
-
-// Formulario para Crear Nueva Zona
-document.getElementById('formNuevaZona').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const zoneData = {
-        name: document.getElementById('nombreZona').value,
-        flats: parseInt(document.getElementById('pisoZona').value),
-        qr_identifier: document.getElementById('qrIdentifier').value,
-        description: document.getElementById('descripcionZona').value,
-        photo_url: null
-    };
-    try {
-        await request('/api/zones', 'POST', zoneData);
-        bootstrap.Modal.getInstance(document.getElementById('modalNuevaZona')).hide();
-        renderZones(); // Recarga la vista de zonas
-
-        Swal.fire({
-            icon: 'success',
-            title: '¡Creado!',
-            text: 'La nueva zona ha sido creada con éxito.',
-            showConfirmButton: false,
-            timer: 1500
-        });
-    } catch (error) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: `Error al crear la zona: ${error.message}`
-        });
-    }
-});
-
-// Formulario para Crear Nueva Asignación
-document.getElementById('formNuevaAsignacion').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const assignmentData = {
-        users_id: parseInt(document.getElementById('asignacionUsuario').value),
-        zones_id: parseInt(document.getElementById('asignacionZona').value)
-    };
-    try {
-        await request('/api/assignments', 'POST', assignmentData);
-        bootstrap.Modal.getInstance(document.getElementById('modalNuevaAsignacion')).hide();
-        renderAllocations(); // Recarga la tabla de asignaciones
-
-        Swal.fire({
-            icon: 'success',
-            title: '¡Creado!',
-            text: 'La nueva asignación ha sido creada con éxito.',
-            showConfirmButton: false,
-            timer: 1500
-        });
-    }
-    catch (error) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: `Error al crear la asignación: ${error.message}`
-        });
-    }
-});
-
-    // ===================================================================
-    // ¡NUEVO CÓDIGO! PARA POBLAR EL MODAL DE ASIGNACIONES
-    // ===================================================================
-const modalNuevaAsignacion = document.getElementById('modalNuevaAsignacion');
-
-// Esta función se encarga de buscar los datos y llenar los <select>
-const populateAssignmentModalDropdowns = async () => {
-    const userSelect = document.getElementById('asignacionUsuario');
-    const zoneSelect = document.getElementById('asignacionZona');
-
-    // Muestra un estado de "Cargando..."
-    userSelect.innerHTML = '<option>Cargando usuarios...</option>';
-    zoneSelect.innerHTML = '<option>Cargando zonas...</option>';
-
-    try {
-        // Pide a la API la lista de empleados y zonas al mismo tiempo
-        const [employees, zones] = await Promise.all([
-            request('/api/employees'), // Endpoint que devuelve solo empleados
-            request('/api/zones')
-        ]);
-
-        // Limpia los selectores
-        userSelect.innerHTML = '<option selected disabled value="">Seleccionar usuario...</option>';
-        zoneSelect.innerHTML = '<option selected disabled value="">Seleccionar zona...</option>';
-
-        // Llena el selector de usuarios
-        employees.forEach(employee => {
-            const option = document.createElement('option');
-            option.value = employee.id;
-            option.textContent = `${employee.names} ${employee.lastnames}`;
-            userSelect.appendChild(option);
-        });
-
-        // Llena el selector de zonas
-        zones.forEach(zone => {
-            const option = document.createElement('option');
-            option.value = zone.id;
-            option.textContent = zone.name;
-            zoneSelect.appendChild(option);
-        });
-
-    } catch (error) {
-        console.error('Error al poblar los selectores:', error);
-        userSelect.innerHTML = '<option>Error al cargar</option>';
-        zoneSelect.innerHTML = '<option>Error al cargar</option>';
-    }
-};
-
-// Escucha el evento que se dispara JUSTO ANTES de que el modal se muestre
-modalNuevaAsignacion.addEventListener('show.bs.modal', () => {
-    populateAssignmentModalDropdowns();
 });
