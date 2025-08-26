@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data.user.role === 'Admin') {
                         window.location.href = './dashboard_admin.html';
                     } else if (data.user.role === 'Empleado') {
-                        window.location.href = './mis_zonas.html'; 
+                        window.location.href = './zones_employee.html'; 
                     }
                 }, 2000); // 2000 milisegundos = 2 segundos
 

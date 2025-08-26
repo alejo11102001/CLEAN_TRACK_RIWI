@@ -195,3 +195,10 @@ window.addEventListener('load', () => {
     });
 });
 }
+
+// Lógica para Cerrar Sesión
+logoutButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    localStorage.removeItem('authToken');
+    window.location.href = './index.html';
+});
