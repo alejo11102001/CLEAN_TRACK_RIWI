@@ -1,173 +1,316 @@
 /* --- Variables de Color y Tipografía (Estilo RIWI Mejorado) --- */
 :root {
-    --riwi-dark-blue: #0A0E29;
-    --riwi-green: #94C11F;
-    --riwi-accent-pink: #E6007E;
-    --riwi-accent-yellow: #FFD100;
-    --background-color: #f0f2f5;
-    --text-color: #343a40;
-    --primary-font: 'Manrope', sans-serif;
+--riwi-dark-blue: #0A0E29;
+--riwi-accent-blue: #00AEEF;
+--riwi-green: #94C11F;
+--background-light: #f4f6f8;
+--text-color: #333333;
+--text-light: #FFFFFF;
+--primary-font: 'Manrope', sans-serif;
+--sidebar-width: 280px;
+--sidebar-collapsed-width: 80px;
 }
 
 /* --- Estilos Generales --- */
 body {
-    background-color: var(--background-color);
-    font-family: var(--primary-font);
-    color: var(--text-color);
+background-color: var(--background-light);
+font-family: var(--primary-font);
+color: var(--text-color);
+line-height: 1.6;
+transition: all 0.3s ease-in-out;
+}
+
+/* --- Contenedores y Layout --- */
+.main-content {
+flex-grow: 1;
+background-color: var(--background-light);
+min-height: 100vh;
+transition: margin-left 0.3s ease;
+}
+
+.card {
+border: none;
+border-radius: 0.75rem;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.card:hover {
+transform: translateY(-5px);
+box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+background-color: white;
+border-bottom: 1px solid #e9ecef;
+font-weight: 700;
+color: var(--riwi-dark-blue);
+padding: 1.25rem 1.5rem;
+}
+
+.card-body h5 {
+font-weight: 500;
+}
+
+.card-body p {
+font-size: 2.5rem;
+font-weight: 800;
+color: var(--riwi-dark-blue);
+margin-bottom: 0;
+}
+
+.card-body .bi {
+font-size: 3.5rem;
 }
 
 /* --- Barra Lateral (Sidebar) --- */
 .sidebar {
-    width: 280px;
-    background-color: var(--riwi-dark-blue);
-    min-height: 100vh;
+width: var(--sidebar-width);
+background-color: var(--riwi-dark-blue);
+min-height: 100vh;
+transition: width 0.3s ease;
+flex-shrink: 0;
 }
 
 .sidebar hr {
-    border-color: rgba(255, 255, 255, 0.1);
+border-color: rgba(255, 255, 255, 0.1);
 }
 
 .sidebar .nav-link {
-    color: rgba(255, 255, 255, 0.7); /* Texto ligeramente más sutil */
-    font-size: 1rem;
-    font-weight: 500;
-    border-radius: 0.5rem;
-    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+color: rgba(255, 255, 255, 0.8);
+font-size: 1rem;
+font-weight: 500;
+padding: 0.75rem 1rem;
+border-radius: 0.5rem;
+transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .sidebar .nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-    color: white;
+background-color: rgba(255, 255, 255, 0.1);
+color: var(--text-light);
 }
 
-/* Estilo para el link activo, ¡más vibrante! */
 .sidebar .nav-link.active {
-    background-color: var(--riwi-green);
-    color: var(--riwi-dark-blue) !important;
-    font-weight: 700;
+background: linear-gradient(to right, var(--riwi-accent-blue), #00AEEF);
+color: var(--riwi-dark-blue) !important;
+font-weight: 700;
+box-shadow: 0 2px 8px rgba(0, 174, 239, 0.3);
 }
 
 .sidebar .dropdown-toggle {
-    font-weight: 500;
-    color: white !important;
+font-weight: 500;
+color: var(--text-light) !important;
 }
 
 .sidebar .dropdown-menu {
-    background-color: #1a1f4a;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+background-color: #1a1f4a;
+border: none;
+border-radius: 0.5rem;
+box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
+
 .sidebar .dropdown-item {
-    color: rgba(255, 255, 255, 0.7);
+color: rgba(255, 255, 255, 0.8);
+padding: 0.75rem 1rem;
 }
+
 .sidebar .dropdown-item:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
+background-color: rgba(255, 255, 255, 0.1);
+color: var(--text-light);
 }
 
-
-/* --- Contenido Principal --- */
-.main-content {
-    flex-grow: 1;
-    background-color: var(--background-color);
+/* --- Estilos para la funcionalidad de colapso --- */
+.dashboard-wrapper.sidebar-collapsed .sidebar {
+width: var(--sidebar-collapsed-width);
 }
 
-.main-content .h2 {
-    color: var(--riwi-dark-blue);
+.dashboard-wrapper.sidebar-collapsed .main-content {
+margin-left: var(--sidebar-collapsed-width);
 }
 
-/* --- Botones Personalizados (Paleta Riwi) --- */
-/* Botón primario ahora es VERDE */
+.dashboard-wrapper.sidebar-collapsed .nav-text,
+.dashboard-wrapper.sidebar-collapsed .sidebar-logo,
+.dashboard-wrapper.sidebar-collapsed .dropdown-toggle strong {
+opacity: 0;
+width: 0;
+overflow: hidden;
+transition: opacity 0.3s ease, width 0.3s ease;
+}
+
+.dashboard-wrapper.sidebar-collapsed .nav-link i {
+margin-right: 0 !important;
+}
+
+.dashboard-wrapper.sidebar-collapsed .sidebar-logo {
+display: none;
+}
+
+.dashboard-wrapper.sidebar-collapsed .logo-header {
+justify-content: center !important;
+}
+
+.dashboard-wrapper.sidebar-collapsed #sidebar-toggle {
+margin: 0 !important;
+}
+
+.dashboard-wrapper.sidebar-collapsed #sidebar-toggle i {
+transform: rotate(180deg);
+}
+
+#sidebar-toggle i {
+transition: transform 0.3s ease;
+}
+
+.dashboard-wrapper.sidebar-collapsed .dropdown-toggle img {
+margin-right: 0 !important;
+}
+
+.dashboard-wrapper.sidebar-collapsed .dropdown {
+width: 100%;
+}
+
+.dashboard-wrapper.sidebar-collapsed .nav-link {
+position: relative;
+text-align: center;
+padding: 0.75rem 0;
+}
+
+.dashboard-wrapper.sidebar-collapsed .nav-link:hover::after {
+content: attr(data-view);
+position: absolute;
+left: calc(var(--sidebar-collapsed-width) + 15px);
+top: 50%;
+transform: translateY(-50%);
+background-color: var(--riwi-dark-blue);
+color: white;
+padding: 0.5rem 1rem;
+border-radius: 0.5rem;
+white-space: nowrap;
+z-index: 1000;
+opacity: 1;
+transition: opacity 0.3s ease;
+}
+
+/* --- Botones Personalizados --- */
 .btn-riwi-primary {
-    background-color: var(--riwi-green);
-    color: var(--riwi-dark-blue);
-    font-weight: 700;
-    border: none;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+background-color: var(--riwi-accent-blue);
+color: var(--riwi-dark-blue);
+font-weight: 700;
+border: none;
+border-radius: 0.5rem;
+padding: 0.75rem 1.5rem;
+transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .btn-riwi-primary:hover {
-    background-color: #82a81b; /* Verde más oscuro */
-    color: var(--riwi-dark-blue);
-    transform: translateY(-2px);
+background-color: #008cc9;
+color: var(--riwi-dark-blue);
+transform: translateY(-2px);
 }
 
+.btn-riwi-primary:active {
+transform: translateY(0);
+}
 
 /* --- Estilos de la tabla --- */
-.card {
-    border: none;
-    border-radius: 0.75rem;
-}
-
-.table {
-    margin-bottom: 0;
-}
-
 .table thead th {
-    font-weight: 700;
-    color: var(--riwi-dark-blue);
-    border-bottom-width: 2px;
+font-weight: 700;
+color: var(--riwi-dark-blue);
+border-bottom: 2px solid var(--riwi-accent-blue);
+background-color: var(--background-light);
 }
 
-/* Botones de acciones dentro de la tabla con colores de marca */
-.table .btn-outline-success {
-    border-color: var(--riwi-green);
-    color: var(--riwi-green);
-}
-.table .btn-outline-success:hover {
-    background-color: var(--riwi-green);
-    color: var(--riwi-dark-blue);
+.table-hover tbody tr:hover {
+background-color: rgba(0, 0, 0, 0.03);
 }
 
-.table .btn-outline-secondary {
-    border-color: var(--riwi-dark-blue);
-    color: var(--riwi-dark-blue);
-}
-.table .btn-outline-secondary:hover {
-    background-color: var(--riwi-dark-blue);
-    color: white;
+.table .btn {
+border-radius: 0.5rem;
+font-weight: 600;
+transition: all 0.2s ease;
 }
 
-.main-content {
-    position: relative; /* Necesario para posicionar el loader dentro */
+.table .btn-outline-primary {
+color: var(--riwi-accent-blue);
+border-color: var(--riwi-accent-blue);
 }
 
+.table .btn-outline-primary:hover {
+background-color: var(--riwi-accent-blue);
+color: var(--text-light);
+}
+
+.table .btn-outline-danger {
+color: #dc3545;
+border-color: #dc3545;
+}
+
+.table .btn-outline-danger:hover {
+background-color: #dc3545;
+color: white;
+}
+
+/* --- Estilos para los modales --- */
+.modal-content {
+border-radius: 1rem;
+border: none;
+box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+border-bottom: none;
+padding: 1.5rem 2rem 0.5rem;
+}
+
+.modal-title {
+font-weight: 700;
+color: var(--riwi-dark-blue);
+}
+
+.modal-body {
+padding: 1rem 2rem 1.5rem;
+}
+
+.modal-footer {
+border-top: none;
+padding: 0.5rem 2rem 1.5rem;
+}
+
+.form-floating > label {
+color: #6c757d;
+}
+
+.form-control:focus, .form-select:focus {
+border-color: var(--riwi-accent-blue);
+box-shadow: 0 0 0 0.25rem rgba(0, 174, 239, 0.25);
+}
+
+/* --- Estilos para las Cards de Zonas --- */
+#zonas-grid-container .card {
+transition: transform 0.3s ease;
+}
+
+#zonas-grid-container .card:hover {
+transform: translateY(-5px);
+box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Estilos para los badgets de rol/estado --- */
+.badge {
+font-size: 0.8em;
+padding: 0.5em 0.8em;
+}
+
+.badge.bg-success { background-color: #28a745 !important; }
+.badge.bg-info { background-color: var(--riwi-accent-blue) !important; }
+.badge.bg-danger { background-color: #dc3545 !important; }
+
+/* --- Estilos para el Loader --- */
 #loader-wrapper {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(240, 242, 245, 0.8); /* Fondo semi-transparente */
-    display: none; /* Oculto por defecto */
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    z-index: 1000;
-    transition: opacity 0.3s ease;
+background-color: rgba(244, 246, 248, 0.9);
 }
 
-.loader-logo {
-    animation: pulse 1.5s infinite ease-in-out;
-}
-
-#loader-wrapper p {
-    margin-top: 1rem;
-    font-weight: 500;
-    color: var(--riwi-dark-blue);
-}
-
-/* Animación de pulso para el logo */
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-        opacity: 0.7;
-    }
-    50% {
-        transform: scale(1.1);
-        opacity: 1;
-    }
-    100% {
-        transform: scale(1);
-        opacity: 0.7;
-    }
-}
+.text-success { color: var(--riwi-green) !important; }
+.text-warning { color: var(--riwi-accent-blue) !important; }
+.text-info { color: var(--riwi-accent-blue) !important; }
+.text-secondary { color: var(--text-color) !important; }
