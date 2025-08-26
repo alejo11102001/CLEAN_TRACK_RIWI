@@ -1,10 +1,12 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // --- OBTENER ELEMENTOS DEL DOM ---
     const registroLimpiezaModal = document.getElementById('registroLimpiezaModal');
     const modalForm = document.getElementById('formRegistroLimpieza');
     const modalLoader = document.getElementById('modalLoader');
     const successToastEl = document.getElementById('successToast');
     const successToast = successToastEl ? new bootstrap.Toast(successToastEl) : null;
     
+    // Elementos del flujo de registro
     const qrScannerView = document.getElementById('qr-scanner-view');
     const registrationFormView = document.getElementById('registration-form-view');
     const startScanBtn = document.getElementById('start-scan-btn');
@@ -18,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentZoneCardId = '';
     let html5QrCode = null;
 
+    // --- LÓGICA DE FILTROS ---
     const filterButtons = document.querySelectorAll('.filters .btn-filter');
     const zoneCards = document.querySelectorAll('.zone-card-wrapper');
 
@@ -35,6 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // --- LÓGICA DEL ESCÁNER QR ---
     function onScanSuccess(decodedText, decodedResult) {
         console.log(`Código QR leído: ${decodedText}`);
         html5QrCode.stop().then(() => {
@@ -54,6 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .catch(err => alert("Error al iniciar la cámara. Asegúrate de dar los permisos necesarios."));
     });
 
+    // --- LÓGICA PARA TOMAR FOTO ---
     tomarFotoBtn.addEventListener('click', () => evidenceInput.click());
 
     evidenceInput.addEventListener('change', function(event) {
@@ -70,6 +75,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // --- LÓGICA DEL MODAL DE REGISTRO ---
     registroLimpiezaModal.addEventListener('show.bs.modal', function (event) {
         const button = event.relatedTarget;
         currentZoneName = button.getAttribute('data-zone-name');
@@ -124,4 +130,32 @@ document.addEventListener('DOMContentLoaded', function () {
             if (successToast) successToast.show();
         }, 1500);
     });
+
+    // --- LÓGICA DEL MODAL DE PERFIL ---
+    const profileModal = document.getElementById('profileModal');
+    if (profileModal) {
+        const profilePictureInput = document.getElementById('profilePictureInput');
+        const profilePicturePreview = document.getElementById('profilePicturePreview');
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
+
+        profilePicturePreview.addEventListener('click', () => profilePictureInput.click());
+
+        profilePictureInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profilePicturePreview.setAttribute('src', e.target.result);
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        changePasswordBtn.addEventListener('click', function() {
+            alert('Funcionalidad para cambiar contraseña se activaría aquí.');
+            const modalInstance = bootstrap.Modal.getInstance(profileModal);
+            modalInstance.hide();
+        });
+    }
 });
+
