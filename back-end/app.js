@@ -136,6 +136,7 @@ app.post('/api/cleaning-records', authenticateToken, upload.single('evidence'), 
 });
 
 // POST /api/login
+
 app.post('/api/login', async (req, res) => {
     // 1. Obtener email y contraseña del cuerpo de la solicitud
     const { email, password } = req.body;
@@ -186,6 +187,131 @@ app.post('/api/login', async (req, res) => {
 
     } catch (error) {
         console.error('Error en el login:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+// GET
+
+// GET /api/users - Obtiene todos los usuarios con su rol
+app.get('/api/users', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Acceso denegado.' });
+    try {
+        const query = `
+            SELECT 
+                u.id, u.names, u.lastnames, u.email, u.is_active,
+                CASE 
+                    WHEN a.users_id IS NOT NULL THEN 'Admin'
+                    WHEN e.users_id IS NOT NULL THEN 'Empleado'
+                    ELSE 'Sin Asignar' 
+                END AS rol
+            FROM users u
+            LEFT JOIN employees e ON u.id = e.users_id
+            LEFT JOIN admins a ON u.id = a.users_id
+            ORDER BY u.id;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch(error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+// GET /api/employees - Obtiene solo los empleados
+app.get('/api/employees', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Acceso denegado.' });
+    try {
+        const query = `
+            SELECT 
+                u.id, u.names, u.lastnames, u.email, e.employee_code, e.shift
+            FROM users u
+            INNER JOIN employees e ON u.id = e.users_id
+            ORDER BY u.names;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch(error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+// GET /api/admins - Obtiene solo los administradores
+app.get('/api/admins', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Acceso denegado.' });
+    try {
+        const query = `
+            SELECT 
+                u.id, u.names, u.lastnames, u.email
+            FROM users u
+            INNER JOIN admins a ON u.id = a.users_id
+            ORDER BY u.names;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch(error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+
+// GET /api/zones - Obtiene todas las zonas
+app.get('/api/zones', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Acceso denegado.' });
+    try {
+        const result = await pool.query('SELECT * FROM zones ORDER BY flats, name;');
+        res.json(result.rows);
+    } catch(error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+
+// GET /api/assignments - Obtiene todas las asignaciones
+app.get('/api/assignments', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Acceso denegado.' });
+    try {
+        const query = `
+            SELECT 
+                za.id, za.status, za.assigned_at,
+                u.names || ' ' || u.lastnames AS employee_name,
+                z.name AS zone_name
+            FROM zone_assignments za
+            INNER JOIN users u ON za.users_id = u.id
+            INNER JOIN zones z ON za.zones_id = z.id
+            ORDER BY u.names, z.name;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch(error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+
+// GET /api/cleaning-records - Obtiene todos los registros de limpieza
+app.get('/api/cleaning-records', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Acceso denegado.' });
+    try {
+        const query = `
+            SELECT 
+                c.id, c.cleaned_at, c.cleaning_type, c.observations, c.status,
+                u.names || ' ' || u.lastnames AS employee_name,
+                z.name AS zone_name,
+                c.evidence
+            FROM cleaning c
+            INNER JOIN users u ON c.users_id = u.id
+            INNER JOIN zones z ON c.zones_id = z.id
+            ORDER BY c.cleaned_at DESC;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch(error) {
+        console.error(error);
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });
