@@ -362,28 +362,62 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        // Si se hace clic en el botón de editar usuario
-        if (target.matches('.edit-user-btn')) {
-            const userId = target.dataset.userId;
-            try {
-                const user = await request(`/api/users/${userId}`);
-                
-                document.getElementById('modalNuevoUsuarioLabel').textContent = 'Editar Usuario';
-                document.getElementById('nombreUsuario').value = user.names;
-                document.getElementById('apellidoUsuario').value = user.lastnames;
-                document.getElementById('emailUsuario').value = user.email;
-                document.getElementById('codigoUsuario').value = user.employee_code || '';
-                document.getElementById('horarioUsuario').value = user.shift || '';
-                document.getElementById('rolUsuario').value = user.rol;
-                document.getElementById('formNuevoUsuario').dataset.editingId = userId;
-                
-                document.getElementById('password-field-group').style.display = 'none';
-                
-                new bootstrap.Modal(document.getElementById('modalNuevoUsuario')).show();
-            } catch (error) {
-                Swal.fire('Error', 'No se pudieron cargar los datos del usuario para editar.', 'error');
-            }
+    // Si se hace clic en el botón de editar usuario
+    // Obtenemos los elementos del DOM una sola vez
+    const rolSelector = document.getElementById('rolUsuario');
+    const horarioContenedor = document.getElementById('horarioUsuario').closest('.form-floating');
+    const horarioSelector = document.getElementById('horarioUsuario');
+
+    // Agregamos un listener para el evento 'change' al selector de rol
+    rolSelector.addEventListener('change', function() {
+        // Verificamos si el valor seleccionado es 'Admin'
+        if (this.value === 'Admin') {
+            // Si es 'Admin', ocultamos el contenedor del horario
+            horarioContenedor.style.display = 'none';
+            // También lo deshabilitamos para que no envíe datos
+            horarioSelector.disabled = true;
+            // Y removemos el atributo 'required'
+            horarioSelector.removeAttribute('required');
+        } else {
+            // Si se selecciona cualquier otra cosa, mostramos el contenedor
+            horarioContenedor.style.display = 'block';
+            // Lo volvemos a habilitar
+            horarioSelector.disabled = false;
+            // Y volvemos a agregar el atributo 'required'
+            horarioSelector.setAttribute('required', 'required');
         }
+    });
+
+    // AHORA TU LÓGICA DE EDICIÓN:
+    if (target.matches('.edit-user-btn')) {
+        const userId = target.dataset.userId;
+        try {
+            const user = await request(`/api/users/${userId}`);
+            
+            // Llenamos los campos del formulario
+            document.getElementById('modalNuevoUsuarioLabel').textContent = 'Editar Usuario';
+            document.getElementById('nombreUsuario').value = user.names;
+            document.getElementById('apellidoUsuario').value = user.lastnames;
+            document.getElementById('emailUsuario').value = user.email;
+            document.getElementById('codigoUsuario').value = user.employee_code || '';
+            document.getElementById('horarioUsuario').value = user.shift || '';
+            document.getElementById('rolUsuario').value = user.rol;
+
+            document.getElementById('formNuevoUsuario').dataset.editingId = userId;
+            document.getElementById('password-field-group').style.display = 'none';
+            
+            // ✨ LÍNEA CRÍTICA AGREGADA:
+            // Disparamos el evento 'change' manualmente al cargar los datos.
+            // Esto activará la lógica que acabamos de crear para que se oculte o muestre
+            // el campo de horario basado en el rol del usuario que se está editando.
+            rolSelector.dispatchEvent(new Event('change'));
+            
+            // Mostramos el modal
+            new bootstrap.Modal(document.getElementById('modalNuevoUsuario')).show();
+        } catch (error) {
+            Swal.fire('Error', 'No se pudieron cargar los datos del usuario para editar.', 'error');
+        }
+    }
 
         // --- LÓGICA PARA ZONAS (AÑADIR ESTO) ---
         if (target.matches('.delete-zone-btn')) {
