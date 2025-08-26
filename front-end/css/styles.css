@@ -1,117 +1,107 @@
-/* --- Variables de Color y Tipografía (Estilo RIWI) --- */
+/* --- Variables de Color y Tipografía --- */
 :root {
-    --riwi-dark-blue: #0A0E29; /* Azul oscuro oficial de la web */
+    --riwi-dark-blue: #0A0E29;
     --riwi-green: #94C11F;
-    --riwi-accent-pink: #E6007E;
-    --background-color: #f0f2f5;
-    --input-border: #ced4da;
-    --text-color: #555;
     --primary-font: 'Manrope', sans-serif;
+    --background-color: #f0f2f5;
 }
 
-/* --- Estilos Generales --- */
+/* --- Estilos Generales y Animaciones --- */
 body {
     background-color: var(--background-color);
     font-family: var(--primary-font);
+    overflow: hidden; /* Evita el scroll en la página principal */
 }
 
-/* --- Panel Izquierdo (Imagen) --- */
 .left-panel {
-    background: linear-gradient(rgba(10, 14, 41, 0.6), rgba(10, 14, 41, 0.8)), url('../img/img_login.jpg') no-repeat center center;
+    background: linear-gradient(rgba(10, 14, 41, 0.7), rgba(10, 14, 41, 0.7)), url('../img/img_login.jpg') no-repeat center center;
     background-size: cover;
 }
 
-/* --- Panel Derecho (Formulario) --- */
-.form-signin {
-    max-width: 400px;
+.welcome-text, .logo-header, .footer-text {
+    animation: fadeIn 1s ease-out forwards;
 }
 
+.form-container {
+    overflow: hidden;
+}
+
+.form-signin {
+    max-width: 400px;
+    animation: fadeInSlideUp 0.8s ease-out forwards;
+}
+
+.form-signin.fade-out {
+    animation: fadeOut 0.3s ease-in forwards;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeInSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+/* --- Estilos de Componentes --- */
 .logo-img {
     max-width: 150px;
 }
 
 .icon-large {
-    font-size: 3rem; /* tamaño de ícono */
-}
-
-/* --- Clases de Utilidad --- */
-.text-riwi-green {
+    font-size: 3rem;
     color: var(--riwi-green);
 }
 
-/* --- Estilos de Formularios Flotantes de Bootstrap --- */
+/* --- Formularios --- */
 .form-floating > .form-control {
     height: calc(3.5rem + 2px);
     padding: 1rem;
+    border-radius: 0.5rem;
 }
-.form-floating > label {
-    padding: 1rem;
-}
-
 .form-control:focus {
-    border-color: var(--riwi-dark-blue);
-    box-shadow: 0 0 0 0.25rem rgba(10, 14, 41, 0.25);
+    border-color: var(--riwi-green);
+    box-shadow: 0 0 0 0.25rem rgba(148, 193, 31, 0.25);
 }
 .form-check-input:checked {
     background-color: var(--riwi-dark-blue);
     border-color: var(--riwi-dark-blue);
 }
 
-/* --- Botones Personalizados --- */
+.password-toggle-btn {
+    border-left: 0;
+    border-radius: 0 0.5rem 0.5rem 0 !important;
+}
+.password-toggle-btn:focus {
+    box-shadow: none;
+}
+.form-control:focus + .password-toggle-btn {
+    border-color: var(--riwi-green);
+}
+
+/* --- Botones y Enlaces --- */
 .btn-riwi-primary {
-    background-color: var(--riwi-dark-blue);
-    color: white;
-    font-weight: 700;
+    background-color: var(--riwi-green);
+    color: var(--riwi-dark-blue);
+    font-weight: 800;
     border: none;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
+    border-radius: 50px;
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
 }
 .btn-riwi-primary:hover {
-    background-color: #1a1f4a;
-    color: white;
+    background-color: #82a81b;
+    color: var(--riwi-dark-blue);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-.btn-google {
-    background-color: #fff;
-    color: var(--text-color);
-    border: 1px solid var(--input-border);
-    font-weight: 500;
-    transition: background-color 0.3s ease;
-}
-.btn-google:hover {
-    background-color: #f8f9fa;
-}
-
-/* --- Enlaces y Divisores --- */
-.forgot-link, .text-center a {
+.forgot-link {
     color: var(--riwi-dark-blue);
     text-decoration: none;
     font-size: 0.9rem;
     font-weight: 500;
 }
-.forgot-link:hover, .text-center a:hover {
+.forgot-link:hover {
     text-decoration: underline;
 }
-.text-center a.fw-bold {
-    color: var(--riwi-accent-pink);
-}
-
-.divider-text {
-    display: flex;
-    align-items: center;
-    text-align: center;
-    color: #adb5bd;
-    font-size: 0.9rem;
-}
-.divider-text::before,
-.divider-text::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid #dee2e6;
-}
-.divider-text:not(:empty)::before {
-    margin-right: .5em;
-}
-.divider-text:not(:empty)::after {
-    margin-left: .5em;
-}
-
