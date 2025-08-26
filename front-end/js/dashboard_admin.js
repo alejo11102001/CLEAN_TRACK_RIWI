@@ -39,7 +39,7 @@ const loadCleaningRecords = async () => {
 document.addEventListener('DOMContentLoaded', () => {
     // Asegúrate de que el token exista antes de cargar los datos
     if (!localStorage.getItem('authToken')) {
-        window.location.href = '/login.html';
+        window.location.href = './index.html';
         return;
     }
     
