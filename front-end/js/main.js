@@ -362,28 +362,62 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        // Si se hace clic en el botón de editar usuario
-        if (target.matches('.edit-user-btn')) {
-            const userId = target.dataset.userId;
-            try {
-                const user = await request(`/api/users/${userId}`);
-                
-                document.getElementById('modalNuevoUsuarioLabel').textContent = 'Editar Usuario';
-                document.getElementById('nombreUsuario').value = user.names;
-                document.getElementById('apellidoUsuario').value = user.lastnames;
-                document.getElementById('emailUsuario').value = user.email;
-                document.getElementById('codigoUsuario').value = user.employee_code || '';
-                document.getElementById('horarioUsuario').value = user.shift || '';
-                document.getElementById('rolUsuario').value = user.rol;
-                document.getElementById('formNuevoUsuario').dataset.editingId = userId;
-                
-                document.getElementById('password-field-group').style.display = 'none';
-                
-                new bootstrap.Modal(document.getElementById('modalNuevoUsuario')).show();
-            } catch (error) {
-                Swal.fire('Error', 'No se pudieron cargar los datos del usuario para editar.', 'error');
-            }
+    // Si se hace clic en el botón de editar usuario
+    // Obtenemos los elementos del DOM una sola vez
+    const rolSelector = document.getElementById('rolUsuario');
+    const horarioContenedor = document.getElementById('horarioUsuario').closest('.form-floating');
+    const horarioSelector = document.getElementById('horarioUsuario');
+
+    // Agregamos un listener para el evento 'change' al selector de rol
+    rolSelector.addEventListener('change', function() {
+        // Verificamos si el valor seleccionado es 'Admin'
+        if (this.value === 'Admin') {
+            // Si es 'Admin', ocultamos el contenedor del horario
+            horarioContenedor.style.display = 'none';
+            // También lo deshabilitamos para que no envíe datos
+            horarioSelector.disabled = true;
+            // Y removemos el atributo 'required'
+            horarioSelector.removeAttribute('required');
+        } else {
+            // Si se selecciona cualquier otra cosa, mostramos el contenedor
+            horarioContenedor.style.display = 'block';
+            // Lo volvemos a habilitar
+            horarioSelector.disabled = false;
+            // Y volvemos a agregar el atributo 'required'
+            horarioSelector.setAttribute('required', 'required');
         }
+    });
+
+    // AHORA TU LÓGICA DE EDICIÓN:
+    if (target.matches('.edit-user-btn')) {
+        const userId = target.dataset.userId;
+        try {
+            const user = await request(`/api/users/${userId}`);
+            
+            // Llenamos los campos del formulario
+            document.getElementById('modalNuevoUsuarioLabel').textContent = 'Editar Usuario';
+            document.getElementById('nombreUsuario').value = user.names;
+            document.getElementById('apellidoUsuario').value = user.lastnames;
+            document.getElementById('emailUsuario').value = user.email;
+            document.getElementById('codigoUsuario').value = user.employee_code || '';
+            document.getElementById('horarioUsuario').value = user.shift || '';
+            document.getElementById('rolUsuario').value = user.rol;
+
+            document.getElementById('formNuevoUsuario').dataset.editingId = userId;
+            document.getElementById('password-field-group').style.display = 'none';
+            
+            // ✨ LÍNEA CRÍTICA AGREGADA:
+            // Disparamos el evento 'change' manualmente al cargar los datos.
+            // Esto activará la lógica que acabamos de crear para que se oculte o muestre
+            // el campo de horario basado en el rol del usuario que se está editando.
+            rolSelector.dispatchEvent(new Event('change'));
+            
+            // Mostramos el modal
+            new bootstrap.Modal(document.getElementById('modalNuevoUsuario')).show();
+        } catch (error) {
+            Swal.fire('Error', 'No se pudieron cargar los datos del usuario para editar.', 'error');
+        }
+    }
 
         // --- LÓGICA PARA ZONAS (AÑADIR ESTO) ---
         if (target.matches('.delete-zone-btn')) {
@@ -440,24 +474,87 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+    });
 
+    // =====================================================
+    // 1. ABRIR MODAL PARA CREAR O EDITAR
+    // =====================================================
+    document.addEventListener('click', async (event) => {
+        const target = event.target;
+
+        // ==== Caso EDITAR ====
         if (target.matches('.edit-assignment-btn')) {
             const assignmentId = target.dataset.assignmentId;
             try {
-                // 1. Carga los datos de la asignación específica
+                // Carga datos de la asignación
                 const assignment = await request(`/api/assignments/${assignmentId}`);
-                
-                // 2. Pobla y muestra el modal
+
+                // Poblar dropdowns
                 await populateAssignmentModalDropdowns(assignment.users_id, assignment.zones_id);
+
+                // Configurar modal en modo edición
+                const form = document.getElementById('formNuevaAsignacion');
+                form.dataset.editingId = assignmentId;
+
                 document.getElementById('modalNuevaAsignacionLabel').textContent = 'Editar Asignación';
-                document.getElementById('formNuevaAsignacion').dataset.editingId = assignmentId;
-                
+
                 new bootstrap.Modal(document.getElementById('modalNuevaAsignacion')).show();
             } catch (error) {
                 Swal.fire('Error', 'No se pudieron cargar los datos de la asignación.', 'error');
             }
         }
+
+        // ==== Caso CREAR ====
+        if (target.matches('.new-assignment-btn')) {
+            try {
+                // Poblar dropdowns vacíos
+                await populateAssignmentModalDropdowns();
+
+                // Configurar modal en modo creación
+                const form = document.getElementById('formNuevaAsignacion');
+                delete form.dataset.editingId;
+
+                document.getElementById('modalNuevaAsignacionLabel').textContent = 'Nueva Asignación';
+
+                new bootstrap.Modal(document.getElementById('modalNuevaAsignacion')).show();
+            } catch (error) {
+                Swal.fire('Error', 'No se pudo preparar el formulario.', 'error');
+            }
+        }
     });
+
+
+    // =====================================================
+    // 2. SUBMIT DEL FORMULARIO (crear o actualizar)
+    // =====================================================
+    document.getElementById('formNuevaAsignacion').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const editingId = form.dataset.editingId;
+
+        const assignmentData = {
+            users_id: document.getElementById('asignacionUsuario').value,
+            zones_id: document.getElementById('asignacionZona').value,
+        };
+
+        try {
+            if (editingId) {
+                // === Actualizar ===
+                await request(`/api/assignments/${editingId}`, 'PUT', assignmentData);
+                Swal.fire('¡Actualizada!', 'La asignación ha sido actualizada.', 'success');
+            } else {
+                // === Crear ===
+                await request('/api/assignments', 'POST', assignmentData);
+                Swal.fire('¡Creada!', 'La nueva asignación ha sido creada.', 'success');
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('modalNuevaAsignacion')).hide();
+            renderAllocations();
+        } catch (error) {
+            Swal.fire('Error', `No se pudo guardar la asignación: ${error.message}`, 'error');
+        }
+    });
+
 
     // --- CONECTA EL MANEJADOR AL FORMULARIO ---
     document.getElementById('formNuevoUsuario').addEventListener('submit', handleUserFormSubmit);
