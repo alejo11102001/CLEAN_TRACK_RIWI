@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const modalLoader = document.getElementById('modalLoader');
     const successToastEl = document.getElementById('successToast');
     const successToast = successToastEl ? new bootstrap.Toast(successToastEl) : null;
-    
+
     // Elementos del flujo de registro
     const qrScannerView = document.getElementById('qr-scanner-view');
     const registrationFormView = document.getElementById('registration-form-view');
@@ -16,9 +16,24 @@ document.addEventListener('DOMContentLoaded', function () {
     const fotoPreview = document.getElementById('foto-preview');
     const saveBtn = document.getElementById('btn-guardar');
 
+    // Elementos del modal de perfil
+    const profileModal = document.getElementById('profileModal');
+    const profilePictureInput = document.getElementById('profilePictureInput');
+    const profilePicturePreview = document.getElementById('profilePicturePreview');
+
+    // Elementos del header
+    const profileDropdownImage = document.querySelector('.dropdown-toggle img');
+
     let currentZoneName = '';
     let currentZoneCardId = '';
     let html5QrCode = null;
+
+    // --- LÓGICA PARA CARGAR LA FOTO DE PERFIL INICIAL (si existe en localStorage) ---
+    const storedProfilePicture = localStorage.getItem('profilePicture');
+    if (storedProfilePicture) {
+        profilePicturePreview.src = storedProfilePicture;
+        profileDropdownImage.src = storedProfilePicture;
+    }
 
     // --- LÓGICA DE FILTROS ---
     const filterButtons = document.querySelectorAll('.filters .btn-filter');
@@ -62,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
     tomarFotoBtn.addEventListener('click', () => evidenceInput.click());
 
     evidenceInput.addEventListener('change', function(event) {
-        const file = event.target.files[0];
+        const file = event.target.files [0];
         if (file) {
             const reader = new FileReader();
             reader.onload = e => {
@@ -80,14 +95,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const button = event.relatedTarget;
         currentZoneName = button.getAttribute('data-zone-name');
         currentZoneCardId = 'zona-' + currentZoneName.toLowerCase().replace(/\s+/g, '-');
-        
+
         registroLimpiezaModal.querySelector('#modalZoneTitle').textContent = currentZoneName;
         registrationFormView.classList.add('hidden');
         qrScannerView.classList.remove('hidden');
         startScanBtn.textContent = "Iniciar Escáner";
         startScanBtn.disabled = false;
         qrReader.innerHTML = "";
-        saveBtn.disabled = true; 
+        saveBtn.disabled = true;
         modalForm.reset();
         fotoPreview.classList.add('d-none');
         tomarFotoBtn.innerHTML = `<i class="bi bi-camera-fill me-2"></i> Tomar Foto de Evidencia`;
@@ -103,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     modalForm.addEventListener('submit', function(event) {
         event.preventDefault();
-        if (!evidenceInput.files[0]) {
+        if (!evidenceInput.files [0]) {
             alert('Por favor, toma una foto como evidencia.');
             return;
         }
@@ -132,30 +147,27 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // --- LÓGICA DEL MODAL DE PERFIL ---
-    const profileModal = document.getElementById('profileModal');
     if (profileModal) {
-        const profilePictureInput = document.getElementById('profilePictureInput');
-        const profilePicturePreview = document.getElementById('profilePicturePreview');
-        const changePasswordBtn = document.getElementById('changePasswordBtn');
-
         profilePicturePreview.addEventListener('click', () => profilePictureInput.click());
 
         profilePictureInput.addEventListener('change', function(event) {
-            const file = event.target.files[0];
+            const file = event.target.files [0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     profilePicturePreview.setAttribute('src', e.target.result);
+                    profileDropdownImage.src = e.target.result; // Actualizar la imagen en el header
+                    localStorage.setItem('profilePicture', e.target.result); // Guardar en localStorage
                 }
                 reader.readAsDataURL(file);
+            } else {
+                // Si el usuario cancela la selección de archivo, mantener la imagen anterior
+                const currentPicture = localStorage.getItem('profilePicture');
+                if (currentPicture) {
+                    profilePicturePreview.src = currentPicture;
+                    profileDropdownImage.src = currentPicture;
+                }
             }
-        });
-
-        changePasswordBtn.addEventListener('click', function() {
-            alert('Funcionalidad para cambiar contraseña se activaría aquí.');
-            const modalInstance = bootstrap.Modal.getInstance(profileModal);
-            modalInstance.hide();
         });
     }
 });
-
