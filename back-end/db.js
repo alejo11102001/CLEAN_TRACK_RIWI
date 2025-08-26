@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import pkg from 'pg';
 
-dotenv.config(); // carga variables de .env
+dotenv.config();
 const { Pool } = pkg;
 
 // Pool de conexiones a PostgreSQL

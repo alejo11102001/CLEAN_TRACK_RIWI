@@ -1,12 +1,14 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken'; // --> MEJORA: Faltaba importar jsonwebtoken
+import cors from 'cors';
 import pool from './db.js';
 import multer from 'multer';
 
 const upload = multer({ dest: 'uploads/' });
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 const JWT_SECRET = 'tu_clave_secreta_super_segura_aqui';
