@@ -92,8 +92,21 @@
                         <div>¡QR de zona verificado!</div>
                         </div>
                         <form id="formRegistroLimpieza">
-                            <div class="mb-4"><label class="form-label fw-bold">Tipo de Limpieza</label><div class="btn-group w-100" role="group"><input type="radio" class="btn-check" name="cleaningType" id="type1" autocomplete="off" checked><label class="btn btn-outline-primary" for="type1">Primera Vez</label><input type="radio" class="btn-check" name="cleaningType" id="type2" autocomplete="off"><label class="btn btn-outline-primary" for="type2">Repaso</label></div></div>
-                            <div class="mb-4"><label for="observations" class="form-label fw-bold">Observaciones</label><textarea class="form-control" id="observations" rows="3" placeholder="(Opcional)"></textarea></div>
+                            <input type="hidden" id="zoneId" name="zoneId">
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Tipo de Limpieza</label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="cleaningType" id="type1" autocomplete="off" checked>
+                                    <label class="btn btn-outline-primary" for="type1">Primera Vez</label>
+                                    <input type="radio" class="btn-check" name="cleaningType" id="type2" autocomplete="off">
+                                    <label class="btn btn-outline-primary" for="type2">Repaso</label>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label for="observations" class="form-label fw-bold">Observaciones</label>
+                                <textarea class="form-control" id="observations" rows="3" placeholder="(Opcional)"></textarea>
+                            </div>
                             <div class="mb-4">
                                 <label class="form-label fw-bold">Evidencia Fotográfica</label>
                                 <input class="d-none" type="file" id="evidence" accept="image/*" capture="environment" required>
