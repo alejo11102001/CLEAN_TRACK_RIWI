@@ -19,8 +19,32 @@ document.addEventListener('DOMContentLoaded', function() {
         `,
         // ========== VISTA REGISTROS ==========
         register: `
-            <div class="d-flex justify-content-between align-items-center mb-4"><h1 class="h2 fw-bold">Registros de Limpieza</h1></div>
-            <div class="card shadow-sm"><div class="card-body"><div class="table-responsive"><table class="table table-hover align-middle"><thead class="table-light"><tr><th scope="col">Zona</th><th scope="col">Colaborador</th><th scope="col">Tipo</th><th scope="col">Fecha y Hora</th><th scope="col">Evidencia</th><th scope="col">Observaciones</th></tr></thead><tbody id="tabla-registros-body"><tr><td colspan="6" class="text-center text-muted">No hay registros para mostrar.</td></tr></tbody></table></div></div></div>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2 fw-bold">Registros de Limpieza</h1>
+            </div>
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Zona</th>
+                                    <th scope="col">Colaborador</th>
+                                    <th scope="col">Tipo</th>
+                                    <th scope="col">Fecha y Hora</th>
+                                    <th scope="col">Evidencia</th>
+                                    <th scope="col">Observaciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cleaningRecordsTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No hay registros para mostrar.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         `,
         // ========== VISTA ZONAS ==========
         zones: `

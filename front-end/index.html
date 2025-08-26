@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
@@ -39,7 +39,7 @@
                         <p class="text-muted">Ingresa tus credenciales para acceder a tu cuenta.</p>
                     </div>
                     
-                    <form>
+                    <form id="loginForm">
                         <div class="form-floating mb-3">
                             <input type="email" class="form-control" id="email" placeholder="nombre@ejemplo.com" required>
                             <label for="email">Correo Electrónico</label>
@@ -61,7 +61,6 @@
 
                         <div class="d-grid mb-3">
                             <button type="submit" class="btn btn-riwi-primary text-uppercase py-2">Acceder</button>
-                            <a href="./zones_employee.html"></a>
                         </div>
                     </form>
 
@@ -71,5 +70,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="./js/login.js"></script>
 </body>
 </html>
