@@ -102,18 +102,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // Listener para el formulario de login
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.addEventListener('submit', (event) => {
-                event.preventDefault();
-                // Lógica de autenticación...
-                console.log('Intento de login');
-                // Simular redirección
-                window.location.href = 'zones_employee.html'; 
-            });
-        }
-
         // Listener para el formulario de recuperar contraseña
         const recoverForm = document.getElementById('recoverForm');
         if (recoverForm) {
