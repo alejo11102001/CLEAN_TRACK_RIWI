@@ -440,24 +440,87 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+    });
 
+    // =====================================================
+    // 1. ABRIR MODAL PARA CREAR O EDITAR
+    // =====================================================
+    document.addEventListener('click', async (event) => {
+        const target = event.target;
+
+        // ==== Caso EDITAR ====
         if (target.matches('.edit-assignment-btn')) {
             const assignmentId = target.dataset.assignmentId;
             try {
-                // 1. Carga los datos de la asignación específica
+                // Carga datos de la asignación
                 const assignment = await request(`/api/assignments/${assignmentId}`);
-                
-                // 2. Pobla y muestra el modal
+
+                // Poblar dropdowns
                 await populateAssignmentModalDropdowns(assignment.users_id, assignment.zones_id);
+
+                // Configurar modal en modo edición
+                const form = document.getElementById('formNuevaAsignacion');
+                form.dataset.editingId = assignmentId;
+
                 document.getElementById('modalNuevaAsignacionLabel').textContent = 'Editar Asignación';
-                document.getElementById('formNuevaAsignacion').dataset.editingId = assignmentId;
-                
+
                 new bootstrap.Modal(document.getElementById('modalNuevaAsignacion')).show();
             } catch (error) {
                 Swal.fire('Error', 'No se pudieron cargar los datos de la asignación.', 'error');
             }
         }
+
+        // ==== Caso CREAR ====
+        if (target.matches('.new-assignment-btn')) {
+            try {
+                // Poblar dropdowns vacíos
+                await populateAssignmentModalDropdowns();
+
+                // Configurar modal en modo creación
+                const form = document.getElementById('formNuevaAsignacion');
+                delete form.dataset.editingId;
+
+                document.getElementById('modalNuevaAsignacionLabel').textContent = 'Nueva Asignación';
+
+                new bootstrap.Modal(document.getElementById('modalNuevaAsignacion')).show();
+            } catch (error) {
+                Swal.fire('Error', 'No se pudo preparar el formulario.', 'error');
+            }
+        }
     });
+
+
+    // =====================================================
+    // 2. SUBMIT DEL FORMULARIO (crear o actualizar)
+    // =====================================================
+    document.getElementById('formNuevaAsignacion').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const editingId = form.dataset.editingId;
+
+        const assignmentData = {
+            users_id: document.getElementById('asignacionUsuario').value,
+            zones_id: document.getElementById('asignacionZona').value,
+        };
+
+        try {
+            if (editingId) {
+                // === Actualizar ===
+                await request(`/api/assignments/${editingId}`, 'PUT', assignmentData);
+                Swal.fire('¡Actualizada!', 'La asignación ha sido actualizada.', 'success');
+            } else {
+                // === Crear ===
+                await request('/api/assignments', 'POST', assignmentData);
+                Swal.fire('¡Creada!', 'La nueva asignación ha sido creada.', 'success');
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('modalNuevaAsignacion')).hide();
+            renderAllocations();
+        } catch (error) {
+            Swal.fire('Error', `No se pudo guardar la asignación: ${error.message}`, 'error');
+        }
+    });
+
 
     // --- CONECTA EL MANEJADOR AL FORMULARIO ---
     document.getElementById('formNuevoUsuario').addEventListener('submit', handleUserFormSubmit);
