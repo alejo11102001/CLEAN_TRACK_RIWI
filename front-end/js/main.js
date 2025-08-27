@@ -659,7 +659,14 @@ document.addEventListener('DOMContentLoaded', () => {
         delete form.dataset.editingId;
         document.getElementById('modalNuevaAsignacionLabel').textContent = 'Crear Nueva Asignación';
     });
-    
+
     // --- CARGA INICIAL ---
     loadView('dashboard');
+});
+
+// Lógica para Cerrar Sesión
+logoutButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    localStorage.removeItem('authToken');
+    window.location.href = './index.html';
 });

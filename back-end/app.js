@@ -509,6 +509,85 @@ app.delete('/api/assignments/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// GET /api/me - Obtiene la información del perfil del usuario logueado
+app.get('/api/me', authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
+    try {
+        const query = `
+            SELECT u.id, u.names, u.lastnames, u.email, e.employee_code, e.shift
+            FROM users u
+            JOIN employees e ON u.id = e.users_id
+            WHERE u.id = $1;
+        `;
+        const result = await pool.query(query, [userId]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Perfil de empleado no encontrado.' });
+        }
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error al obtener perfil:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+// GET /api/employee/zones - Obtiene las zonas asignadas al empleado logueado
+app.get('/api/employee/zones', authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
+    try {
+        const query = `
+            SELECT
+                z.id, z.name, z.flats, z.description,
+                -- CORRECCIÓN: Ahora solo cuenta una limpieza si fue DESPUÉS de la fecha de asignación
+                (CASE WHEN c.id IS NOT NULL AND c.cleaned_at >= za.assigned_at THEN 'Completado Hoy' ELSE 'Pendiente' END) as status
+            FROM zone_assignments za
+            JOIN zones z ON za.zones_id = z.id
+            LEFT JOIN cleaning c ON z.id = c.zones_id 
+                                AND c.users_id = $1 
+                                AND c.cleaned_at::date = CURRENT_DATE
+            WHERE za.users_id = $1
+            ORDER BY z.name;
+        `;
+        const result = await pool.query(query, [userId]);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error al obtener zonas del empleado:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+// POST /api/cleaning - Registrar limpieza de una zona
+app.post('/api/cleaning', authenticateToken, upload.single('evidence'), async (req, res) => {
+    const userId = req.user.userId;
+    const { zoneId, cleaningType, observations } = req.body;
+    const evidenceFile = req.file;
+
+    if (!zoneId || !cleaningType) {
+        return res.status(400).json({ message: 'Faltan campos obligatorios.' });
+    }
+
+    try {
+        const query = `
+            INSERT INTO cleaning (zones_id, users_id, cleaning_type, observations, evidence, cleaned_at)
+            VALUES ($1, $2, $3, $4, $5, NOW())
+            RETURNING *;
+        `;
+        const values = [
+            zoneId,
+            userId,
+            cleaningType,
+            observations || null,
+            evidenceFile ? `/back-end/uploads/${evidenceFile.filename}` : null
+        ];
+        const result = await pool.query(query, values);
+
+        res.status(201).json({ message: 'Limpieza registrada con éxito.', cleaning: result.rows[0] });
+    } catch (error) {
+        console.error('Error al registrar limpieza:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+
 app.listen(3000, () => {
     console.log('Servidor corriendo en http://localhost:3000');
 });
