@@ -660,6 +660,25 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modalNuevaAsignacionLabel').textContent = 'Crear Nueva Asignación';
     });
     
+    // --- LÓGICA PARA EL TOGGLE DEL SIDEBAR ---
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+            const body = document.body;
+            body.classList.toggle('sidebar-collapsed');
+            const icon = sidebarToggle.querySelector('i');
+            icon.classList.toggle('bi-arrow-bar-left');
+            icon.classList.toggle('bi-arrow-bar-right');
+        });
+    }
+
     // --- CARGA INICIAL ---
     loadView('dashboard');
+});
+
+// Lógica para Cerrar Sesión
+logoutButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    localStorage.removeItem('authToken');
+    window.location.href = './index.html';
 });
