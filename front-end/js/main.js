@@ -276,6 +276,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainContent = document.getElementById('main-content');
     const navLinks = document.querySelectorAll('.sidebar .nav-link');
 
+    // ---- FUNCIÓN PARA CARGAR LA INFORMACIÓN DEL ADMIN LOGUEADO ----
+    // CAMBIO: Nueva función para obtener y mostrar los datos del perfil del admin.
+    async function loadAdminInfo() {
+        try {
+            // Se asume que existe un endpoint '/api/admin/profile' para obtener los datos del admin actual.
+            const admin = await request('/api/admin/profile'); 
+            const fullName = `${admin.names} ${admin.lastnames}`;
+
+            // Actualiza el nombre en la barra lateral
+            const adminNameDisplay = document.getElementById('admin-name-display');
+            if (adminNameDisplay) {
+                adminNameDisplay.textContent = fullName;
+            }
+            
+            // Actualiza los campos del modal 'Mi Perfil'
+            const perfilNombreInput = document.getElementById('perfilNombre');
+            const perfilEmailInput = document.getElementById('perfilEmail');
+            if (perfilNombreInput) {
+                perfilNombreInput.value = fullName;
+            }
+            if (perfilEmailInput) {
+                perfilEmailInput.value = admin.email;
+            }
+        } catch (error) {
+            console.error('Error al cargar la información del administrador:', error);
+            // Si falla, se muestra un nombre genérico para indicar el problema.
+            const adminNameDisplay = document.getElementById('admin-name-display');
+            if (adminNameDisplay) {
+                adminNameDisplay.textContent = "Admin";
+            }
+        }
+    }
+
     // ---- FUNCIÓN PARA CARGAR VISTAS ----
     function loadView(viewName) {
         mainContent.innerHTML = views[viewName] || '<h2>Contenido no encontrado</h2>';
@@ -673,7 +706,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- CARGA INICIAL ---
-    loadView('dashboard');
+    loadAdminInfo(); // Carga la información del admin
+    loadView('dashboard'); // Carga la vista inicial
 });
 
 // Lógica para Cerrar Sesión
