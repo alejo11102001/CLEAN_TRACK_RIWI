@@ -263,6 +263,126 @@ async function renderAllocations() {
     }
 }
 
+
+async function renderReports() {
+    // Definimos los tipos de reportes disponibles
+    const reportTypes = [
+        { value: 'productivity-employee', text: 'Productividad por Empleado' },
+        { value: 'activity-zone', text: 'Actividad por Zona' },
+        { value: 'general-history', text: 'Historial General de Limpieza' }
+    ];
+
+    const reportTypeSelect = document.getElementById('reportType');
+    reportTypeSelect.innerHTML = ''; // Limpiamos por si acaso
+    reportTypes.forEach(report => {
+        reportTypeSelect.innerHTML += `<option value="${report.value}">${report.text}</option>`;
+    });
+
+    // Añadimos el manejador para el envío del formulario
+    const form = document.querySelector('.card-body form');
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        
+        const reportType = document.getElementById('reportType').value;
+        const selectedDate = document.getElementById('dateRange').value;
+        const resultsContainer = document.getElementById('lista-reportes-generados');
+
+        if (!selectedDate) {
+            Swal.fire('Atención', 'Por favor, selecciona una fecha.', 'warning');
+            return;
+        }
+
+        resultsContainer.innerHTML = '<li class="list-group-item text-muted">Generando reporte...</li>';
+
+        try {
+            // Hacemos la petición a un nuevo endpoint que crearemos en el backend
+            // Le pasamos el tipo de reporte y la fecha
+            const reportData = await request('/api/reports', 'POST', {
+                type: reportType,
+                date: selectedDate
+            });
+
+            // Llamamos a una función para mostrar los datos según el tipo
+            displayReportResults(reportType, reportData, resultsContainer);
+
+        } catch (error) {
+            resultsContainer.innerHTML = `<li class="list-group-item text-danger">Error al generar el reporte: ${error.message}</li>`;
+            Swal.fire('Error', `No se pudo generar el reporte: ${error.message}`, 'error');
+        }
+    });
+}
+
+
+// AÑADE ESTAS NUEVAS FUNCIONES DEBAJO DE renderReports
+
+function displayReportResults(type, data, container) {
+    if (data.length === 0) {
+        container.innerHTML = '<li class="list-group-item text-muted">No se encontraron resultados para la fecha seleccionada.</li>';
+        return;
+    }
+    
+    // Usamos un switch para elegir qué plantilla de reporte usar
+    switch (type) {
+        case 'productivity-employee':
+            container.innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light"><tr><th>Empleado</th><th>Código</th><th>Limpiezas Realizadas</th></tr></thead>
+                        <tbody>
+                            ${data.map(row => `
+                                <tr>
+                                    <td>${row.employee_name}</td>
+                                    <td>${row.employee_code || 'N/A'}</td>
+                                    <td><span class="badge bg-success">${row.total_cleanings}</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            break;
+        
+        case 'activity-zone':
+            container.innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light"><tr><th>Zona</th><th>Piso</th><th>Veces Limpiada</th><th>Última Limpieza</th></tr></thead>
+                        <tbody>
+                            ${data.map(row => `
+                                <tr>
+                                    <td>${row.zone_name}</td>
+                                    <td>${row.flats}</td>
+                                    <td><span class="badge bg-info">${row.cleaning_count}</span></td>
+                                    <td>${new Date(row.last_cleaned).toLocaleString()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            break;
+
+        case 'general-history':
+            container.innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light"><tr><th>Fecha y Hora</th><th>Zona</th><th>Empleado</th><th>Tipo</th></tr></thead>
+                        <tbody>
+                            ${data.map(row => `
+                                <tr>
+                                    <td>${new Date(row.cleaned_at).toLocaleString()}</td>
+                                    <td>${row.zone_name}</td>
+                                    <td>${row.employee_name}</td>
+                                    <td>${row.cleaning_type}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            break;
+
+        default:
+            container.innerHTML = '<li class="list-group-item text-warning">Tipo de reporte no reconocido.</li>';
+    }
+}
 // ===================================================================
 // 3. LÓGICA PRINCIPAL DE LA APLICACIÓN (SPA)
 // ===================================================================
@@ -286,6 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'zones': renderZones(); break;
             case 'users': renderUsers(); break;
             case 'allocations': renderAllocations(); break;
+            case 'reports': renderReports(); break;
         }
     }
 
