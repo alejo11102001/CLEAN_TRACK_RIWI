@@ -119,23 +119,52 @@ app.post('/api/cleaning-records', authenticateToken, upload.single('evidence'), 
     if (req.user.role !== 'Empleado') {
         return res.status(403).json({ message: 'Acceso denegado.' });
     }
-    const { zoneId, cleaningType, observations, image_hash } = req.body;
+
+    const { zoneId, assignmentId, cleaningType, observations, image_hash } = req.body;
     const evidenceFile = req.file;
     const userId = req.user.userId;
 
-    if (!zoneId || !cleaningType || !evidenceFile) {
-        return res.status(400).json({ message: 'Faltan datos obligatorios (zona, tipo o evidencia).' });
+    if (!zoneId || !assignmentId || !cleaningType || !evidenceFile) {
+        return res.status(400).json({ message: 'Faltan datos obligatorios (zona, asignación, tipo o evidencia).' });
     }
+
     const evidence_url = `https://storage.example.com/${evidenceFile.filename}`;
+
     try {
-        const query = `INSERT INTO cleaning (users_id, zones_id, cleaning_type, observations, evidence, image_hash) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;`;
-        const result = await pool.query(query, [userId, zoneId, cleaningType, observations, evidence_url, image_hash]);
-        res.status(201).json({ message: 'Registro de limpieza creado exitosamente.', recordId: result.rows[0].id });
-    } catch(error) {
+        // 1. Insertar en tabla cleaning
+        const insertQuery = `
+            INSERT INTO cleaning (users_id, zones_id, cleaning_type, observations, evidence, image_hash, status)
+            VALUES ($1, $2, $3, $4, $5, $6, 'Completado')
+            RETURNING id;
+        `;
+        const insertResult = await pool.query(insertQuery, [
+            userId,
+            zoneId,
+            cleaningType,
+            observations,
+            evidence_url,
+            image_hash
+        ]);
+
+        // 2. Actualizar asignación como completada
+        const updateQuery = `
+            UPDATE zone_assignments
+            SET status = 'Completada'
+            WHERE id = $1
+        `;
+        await pool.query(updateQuery, [assignmentId]);
+
+        res.status(201).json({
+            message: 'Registro de limpieza creado y asignación marcada como completada.',
+            recordId: insertResult.rows[0].id
+        });
+
+    } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al guardar el registro.' });
     }
 });
+
 
 // POST /api/login
 
@@ -535,17 +564,19 @@ app.get('/api/employee/zones', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     try {
         const query = `
-            SELECT
-                z.id, z.name, z.flats, z.description,
-                -- CORRECCIÓN: Ahora solo cuenta una limpieza si fue DESPUÉS de la fecha de asignación
-                (CASE WHEN c.id IS NOT NULL AND c.cleaned_at >= za.assigned_at THEN 'Completado Hoy' ELSE 'Pendiente' END) as status
-            FROM zone_assignments za
-            JOIN zones z ON za.zones_id = z.id
-            LEFT JOIN cleaning c ON z.id = c.zones_id 
-                                AND c.users_id = $1 
-                                AND c.cleaned_at::date = CURRENT_DATE
-            WHERE za.users_id = $1
-            ORDER BY z.name;
+            SELECT 
+                za.id AS assignment_id, -- Alias para el ID de la asignación
+                za.status,
+                z.id AS zone_id,       -- ID de la zona
+                z.name,
+                z.flats,
+                z.description
+            FROM 
+                zone_assignments za
+            JOIN 
+                zones z ON za.zones_id = z.id
+            WHERE 
+                za.users_id = $1;
         `;
         const result = await pool.query(query, [userId]);
         res.json(result.rows);
