@@ -36,7 +36,7 @@ const loadAssignedZones = async () => {
             if (zone.status === 'Pendiente') pendingCount++;
             const statusClass = zone.status === 'Pendiente' ? 'pendiente' : 'completado-hoy';
             container.innerHTML += `
-                <div class="col-12 col-md-6 col-lg-4 zone-card-wrapper" data-status="${statusClass}">
+                <div class="col-12 col-md-6 col-lg-4 zone-card-wrapper" data-status="${statusClass}" id="assignment-card-${zone.assignment_id}">
                     <div class="card card-zone h-100">
                         <div class="card-status-bar ${statusClass === 'pendiente' ? 'status-pending' : 'status-completed'}"></div>
                         <div class="card-body d-flex flex-column">
@@ -47,7 +47,7 @@ const loadAssignedZones = async () => {
                                 ${zone.status === 'Pendiente' ?
                                     `<button type="button" class="btn btn-sm btn-riwi-primary stretched-link" 
                                         data-bs-toggle="modal" data-bs-target="#registroLimpiezaModal" 
-                                        data-zone-id="${zone.id}" data-zone-name="${zone.name}">
+                                        data-zone-id="${zone.zone_id}" data-zone-name="${zone.name}" data-assignment-id="${zone.assignment_id}" >
                                         Registrar Limpieza
                                     </button>` :
                                     `<div class="completed-check"><i class="bi bi-check-circle-fill"></i> Completado</div>`
@@ -159,6 +159,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const zoneName = button.dataset.zoneName;
         const zoneId = button.dataset.zoneId;
 
+        const assignmentId = button.dataset.assignmentId;
+
+        // hidden input for assignmentId
+        let hiddenAssignmentInput = cleaningForm.querySelector('input[name="assignmentId"]');
+        if (!hiddenAssignmentInput) {
+            hiddenAssignmentInput = document.createElement('input');
+            hiddenAssignmentInput.type = 'hidden';
+            hiddenAssignmentInput.name = 'assignmentId';
+            cleaningForm.appendChild(hiddenAssignmentInput);
+        }
+        hiddenAssignmentInput.value = assignmentId;
+
         registroModalEl.querySelector('#modalZoneTitle').textContent = zoneName;
         
         let hiddenInput = cleaningForm.querySelector('input[name="zoneId"]');
@@ -186,23 +198,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Lógica para enviar el formulario a la base de datos
-    cleaningForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        saveBtn.disabled = true; // Deshabilita para evitar doble clic
-        const formData = new FormData(cleaningForm);
+// Lógica para enviar el formulario a la base de datos
+cleaningForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    saveBtn.disabled = true;
+    
+    const formData = new FormData(cleaningForm);
+    const assignmentIdToUpdate = formData.get('assignmentId');
+    
+    try {
+        // 1. Enviamos los datos al backend
+        await requestWithFile('/api/cleaning-records', formData);
         
-        try {
-            await requestWithFile('/api/cleaning-records', formData);
-            bootstrap.Modal.getInstance(registroModalEl).hide();
-            Swal.fire('¡Guardado!', 'El registro fue guardado con éxito.', 'success');
-            loadAssignedZones();
-        } catch (error) {
-            Swal.fire('Error', `No se pudo guardar el registro: ${error.message}`, 'error');
-        } finally {
-            saveBtn.disabled = false; // Vuelve a habilitar el botón
+        // 2. Cerramos el modal
+        bootstrap.Modal.getInstance(registroModalEl).hide();
+        
+        // 3. Hacemos la actualización visual inmediata ✨
+        const cardToUpdate = document.getElementById(`assignment-card-${assignmentIdToUpdate}`);
+        if (cardToUpdate) {
+            const statusBar = cardToUpdate.querySelector('.card-status-bar');
+            statusBar.classList.remove('status-pending');
+            statusBar.classList.add('status-completed');
+
+            const buttonContainer = cardToUpdate.querySelector('.mt-auto');
+            buttonContainer.innerHTML = `<div class="completed-check"><i class="bi bi-check-circle-fill"></i> Completado</div>`;
+            
+            cardToUpdate.dataset.status = 'completado-hoy';
         }
-    });
+
+        // 4. Mostramos la alerta y ESPERAMOS a que el usuario la cierre
+        await Swal.fire('¡Registro Exitoso!', 'La limpieza ha sido registrada correctamente.', 'success');
+        
+        // 5. SOLO DESPUÉS de que la alerta se cierra, recargamos los datos
+        loadAssignedZones();
+
+    } catch (error) {
+        Swal.fire('Error', `No se pudo guardar el registro: ${error.message}`, 'error');
+    } finally {
+        saveBtn.disabled = false;
+    }
+});
     
     // --- LÓGICA PARA CERRAR SESIÓN ---
     const logoutButton = document.getElementById('logoutButton');
