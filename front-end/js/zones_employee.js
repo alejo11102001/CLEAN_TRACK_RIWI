@@ -1,6 +1,7 @@
 import { request, requestWithFile } from './api.js';
 
 let html5QrCode = null;
+let expectedZoneIdForScan = null; 
 
 // --- FUNCIÓN PARA CARGAR EL PERFIL DEL EMPLEADO ---
 const loadEmployeeProfile = async () => {
@@ -47,7 +48,10 @@ const loadAssignedZones = async () => {
                                 ${zone.status === 'Pendiente' ?
                                     `<button type="button" class="btn btn-sm btn-riwi-primary stretched-link" 
                                         data-bs-toggle="modal" data-bs-target="#registroLimpiezaModal" 
-                                        data-zone-id="${zone.zone_id}" data-zone-name="${zone.name}" data-assignment-id="${zone.assignment_id}" >
+                                        data-zone-id="${zone.code}" 
+                                        data-numeric-zone-id="${zone.zone_id}" 
+                                        data-zone-name="${zone.name}" 
+                                        data-assignment-id="${zone.assignment_id}" >
                                         Registrar Limpieza
                                     </button>` :
                                     `<div class="completed-check"><i class="bi bi-check-circle-fill"></i> Completado</div>`
@@ -99,24 +103,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveBtn = document.getElementById('btn-guardar');
     const cleaningForm = document.getElementById('formRegistroLimpieza');
 
-    // ==========================================================
-    // CORRECCIÓN 1: LÓGICA PARA FOTO DE PERFIL
-    // ==========================================================
+    // Lógica de foto de perfil
     const profilePicturePreview = document.getElementById('profilePicturePreview');
     const profilePictureInput = document.getElementById('profilePictureInput');
     const profileImage = document.getElementById('profileImage');
-    
-    // Cargar foto de perfil desde localStorage si existe
     const storedProfilePicture = localStorage.getItem('profilePicture');
     if (storedProfilePicture) {
         profilePicturePreview.src = storedProfilePicture;
         profileImage.src = storedProfilePicture;
     }
-
-    // Al hacer clic en la imagen, se abre el selector de archivos
     profilePicturePreview.addEventListener('click', () => profilePictureInput.click());
-    
-    // Cuando el usuario elige un archivo
     profilePictureInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (file) {
@@ -125,24 +121,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 const imageUrl = e.target.result;
                 profilePicturePreview.src = imageUrl;
                 profileImage.src = imageUrl;
-                localStorage.setItem('profilePicture', imageUrl); // Guarda la nueva foto
+                localStorage.setItem('profilePicture', imageUrl);
                 Swal.fire('¡Éxito!', 'Foto de perfil actualizada.', 'success');
             };
             reader.readAsDataURL(file);
         }
     });
 
-    // ==========================================================
-    // CORRECCIÓN 2: LÓGICA COMPLETA DEL MODAL DE LIMPIEZA
-    // ==========================================================
-
     // Lógica del Escáner QR
     const onScanSuccess = (decodedText, decodedResult) => {
-        html5QrCode.stop().then(() => {
-            qrScannerView.classList.add('d-none');
-            registrationFormView.classList.remove('d-none');
-            saveBtn.disabled = false;
-        }).catch(err => console.error("Error al detener el escáner.", err));
+        html5QrCode.stop().catch(err => console.error("Fallo al detener el escáner.", err));
+        
+        try {
+            const scannedUrl = new URL(decodedText);
+            const scannedZoneId = scannedUrl.searchParams.get('zone');
+            
+            if (scannedZoneId && scannedZoneId === expectedZoneIdForScan) {
+                Swal.fire('¡Validado!', 'QR correcto. Procede con el registro.', 'success');
+                qrScannerView.classList.add('d-none');
+                registrationFormView.classList.remove('d-none');
+                saveBtn.disabled = false;
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'QR Incorrecto',
+                    text: `Este QR no corresponde a la zona seleccionada.`,
+                });
+                startScanBtn.textContent = "Iniciar Escáner";
+                startScanBtn.disabled = false;
+            }
+        } catch (e) {
+            Swal.fire('QR Inválido', 'El código escaneado no es un QR de zona válido.', 'error');
+            startScanBtn.textContent = "Iniciar Escáner";
+            startScanBtn.disabled = false;
+        }
     };
 
     startScanBtn.addEventListener('click', () => {
@@ -150,18 +162,20 @@ document.addEventListener('DOMContentLoaded', () => {
         startScanBtn.textContent = "Apuntando a la cámara...";
         startScanBtn.disabled = true;
         html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess)
-            .catch(err => alert("Error al iniciar la cámara. Por favor, otorga los permisos necesarios."));
+            .catch(err => Swal.fire("Error al iniciar la cámara", "Por favor, otorga los permisos necesarios.", "error"));
     });
 
-    // Lógica para resetear el modal cada vez que se abre
+    // Lógica para configurar y resetear el modal
     registroModalEl.addEventListener('show.bs.modal', (event) => {
         const button = event.relatedTarget;
         const zoneName = button.dataset.zoneName;
-        const zoneId = button.dataset.zoneId;
-
+        const zoneIdForValidation = button.dataset.zoneId;
+        const numericZoneIdForDb = button.dataset.numericZoneId; // <-- CAMBIO CLAVE 1: Leer el ID numérico
         const assignmentId = button.dataset.assignmentId;
 
-        // hidden input for assignmentId
+        expectedZoneIdForScan = zoneIdForValidation;
+
+        // Input oculto para 'assignmentId'
         let hiddenAssignmentInput = cleaningForm.querySelector('input[name="assignmentId"]');
         if (!hiddenAssignmentInput) {
             hiddenAssignmentInput = document.createElement('input');
@@ -173,16 +187,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         registroModalEl.querySelector('#modalZoneTitle').textContent = zoneName;
         
-        let hiddenInput = cleaningForm.querySelector('input[name="zoneId"]');
-        if (!hiddenInput) {
-            hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'zoneId';
-            cleaningForm.appendChild(hiddenInput);
+        // Input oculto para 'zoneId'
+        let hiddenZoneInput = cleaningForm.querySelector('input[name="zoneId"]');
+        if (!hiddenZoneInput) {
+            hiddenZoneInput = document.createElement('input');
+            hiddenZoneInput.type = 'hidden';
+            hiddenZoneInput.name = 'zoneId';
+            cleaningForm.appendChild(hiddenZoneInput);
         }
-        hiddenInput.value = zoneId;
+        hiddenZoneInput.value = numericZoneIdForDb; // <-- CAMBIO CLAVE 2: Usar el ID numérico para el formulario
 
-        // Resetea a la vista del escáner
+        // Resetear la vista del modal
         qrScannerView.classList.remove('d-none');
         registrationFormView.classList.add('d-none');
         saveBtn.disabled = true;
@@ -191,55 +206,35 @@ document.addEventListener('DOMContentLoaded', () => {
         cleaningForm.reset();
     });
     
-    // Detiene la cámara si se cierra el modal
     registroModalEl.addEventListener('hide.bs.modal', () => {
         if (html5QrCode && html5QrCode.isScanning) {
-            html5QrCode.stop();
+            html5QrCode.stop().catch(err => console.error("Fallo al detener el escáner al cerrar.", err));
         }
     });
 
-// Lógica para enviar el formulario a la base de datos
-cleaningForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    saveBtn.disabled = true;
-    
-    const formData = new FormData(cleaningForm);
-    const assignmentIdToUpdate = formData.get('assignmentId');
-    
-    try {
-        // 1. Enviamos los datos al backend
-        await requestWithFile('/api/cleaning-records', formData);
+    // Lógica para enviar el formulario
+    cleaningForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        saveBtn.disabled = true;
         
-        // 2. Cerramos el modal
-        bootstrap.Modal.getInstance(registroModalEl).hide();
+        const formData = new FormData(cleaningForm);
+        const assignmentIdToUpdate = formData.get('assignmentId');
         
-        // 3. Hacemos la actualización visual inmediata ✨
-        const cardToUpdate = document.getElementById(`assignment-card-${assignmentIdToUpdate}`);
-        if (cardToUpdate) {
-            const statusBar = cardToUpdate.querySelector('.card-status-bar');
-            statusBar.classList.remove('status-pending');
-            statusBar.classList.add('status-completed');
-
-            const buttonContainer = cardToUpdate.querySelector('.mt-auto');
-            buttonContainer.innerHTML = `<div class="completed-check"><i class="bi bi-check-circle-fill"></i> Completado</div>`;
+        try {
+            await requestWithFile('/api/cleaning-records', formData);
+            bootstrap.Modal.getInstance(registroModalEl).hide();
             
-            cardToUpdate.dataset.status = 'completado-hoy';
+            await Swal.fire('¡Registro Exitoso!', 'La limpieza ha sido registrada correctamente.', 'success');
+            // Recargar las zonas para ver el estado actualizado
+            loadAssignedZones();
+        } catch (error) {
+            Swal.fire('Error', `No se pudo guardar el registro: ${error.message}`, 'error');
+        } finally {
+            saveBtn.disabled = false;
         }
-
-        // 4. Mostramos la alerta y ESPERAMOS a que el usuario la cierre
-        await Swal.fire('¡Registro Exitoso!', 'La limpieza ha sido registrada correctamente.', 'success');
-        
-        // 5. SOLO DESPUÉS de que la alerta se cierra, recargamos los datos
-        loadAssignedZones();
-
-    } catch (error) {
-        Swal.fire('Error', `No se pudo guardar el registro: ${error.message}`, 'error');
-    } finally {
-        saveBtn.disabled = false;
-    }
-});
+    });
     
-    // --- LÓGICA PARA CERRAR SESIÓN ---
+    // Lógica para cerrar sesión
     const logoutButton = document.getElementById('logoutButton');
     if (logoutButton) {
         logoutButton.addEventListener('click', (e) => {
