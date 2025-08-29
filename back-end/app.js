@@ -751,6 +751,109 @@ app.post('/api/cleaning', authenticateToken, upload.single('evidence'), async (r
     }
 });
 
+// EN TU ARCHIVO app.js DEL BACKEND
+app.post('/api/reports', authenticateToken, async (req, res) => {
+    // 1. Verificación de permisos
+    if (req.user.role !== 'Admin') {
+        return res.status(403).json({ message: 'Acceso denegado.' });
+    }
+
+    const { type, date } = req.body;
+
+    // 2. Validación de entradas
+    if (!type || !date) {
+        return res.status(400).json({ message: 'El tipo de reporte y la fecha son obligatorios.' });
+    }
+
+    try {
+        // 3. Lógica para manejar el rango de fechas (día completo)
+        // La fecha llega como 'YYYY-MM-DD'. Creamos un rango desde el inicio de ese día
+        // hasta el inicio del día siguiente para cubrir las 24 horas.
+        const startDate = new Date(date);
+        startDate.setHours(0, 0, 0, 0); // Inicio del día seleccionado
+
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 1); // Inicio del día siguiente
+
+        let query = '';
+        const values = [startDate, endDate];
+
+        // 4. Switch para construir la consulta SQL correcta basado en 'type'
+        switch (type) {
+            case 'productivity-employee':
+                query = `
+                    SELECT
+                        u.names || ' ' || u.lastnames AS employee_name,
+                        e.employee_code,
+                        COUNT(c.id) AS total_cleanings
+                    FROM
+                        cleaning c
+                    JOIN
+                        users u ON c.users_id = u.id
+                    JOIN
+                        employees e ON u.id = e.users_id
+                    WHERE
+                        c.cleaned_at >= $1 AND c.cleaned_at < $2
+                    GROUP BY
+                        u.id, e.employee_code
+                    ORDER BY
+                        total_cleanings DESC;
+                `;
+                break;
+
+            case 'activity-zone':
+                query = `
+                    SELECT
+                        z.name AS zone_name,
+                        z.flats,
+                        COUNT(c.id) AS cleaning_count,
+                        MAX(c.cleaned_at) AS last_cleaned
+                    FROM
+                        cleaning c
+                    JOIN
+                        zones z ON c.zones_id = z.id
+                    WHERE
+                        c.cleaned_at >= $1 AND c.cleaned_at < $2
+                    GROUP BY
+                        z.id
+                    ORDER BY
+                        z.name;
+                `;
+                break;
+            
+            case 'general-history':
+                query = `
+                    SELECT
+                        c.cleaned_at,
+                        z.name AS zone_name,
+                        COALESCE(u.names || ' ' || u.lastnames, 'Usuario Eliminado') AS employee_name,
+                        c.cleaning_type
+                    FROM
+                        cleaning c
+                    JOIN
+                        zones z ON c.zones_id = z.id
+                    LEFT JOIN 
+                        users u ON c.users_id = u.id
+                    WHERE
+                        c.cleaned_at >= $1 AND c.cleaned_at < $2
+                    ORDER BY
+                        c.cleaned_at DESC;
+                `;
+                break;
+
+            default:
+                return res.status(400).json({ message: 'Tipo de reporte no válido.' });
+        }
+        
+        // 5. Ejecución de la consulta y envío de resultados
+        const { rows } = await pool.query(query, values);
+        res.json(rows);
+
+    } catch (error) {
+        console.error('Error al generar reporte:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
 
 
 
