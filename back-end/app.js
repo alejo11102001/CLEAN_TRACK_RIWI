@@ -1,6 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken'; // --> MEJORA: Faltaba importar jsonwebtoken
+import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import pool from './db.js';
 import multer from 'multer';
@@ -13,7 +13,6 @@ app.use(express.json());
 
 const JWT_SECRET = 'tu_clave_secreta_super_segura_aqui';
 
-// --> MEJORA: Definición del middleware de autenticación que faltaba
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -29,23 +28,23 @@ const authenticateToken = (req, res, next) => {
 // --- ENDPOINTS ---
 
 // POST EMPLOYEE, ADMIN
-app.post('/api/admin/create-user', authenticateToken, async (req, res) => { // --> MEJORA: Endpoint protegido
+app.post('/api/admin/users', authenticateToken, async (req, res) => {
     if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Acceso denegado.' });
 
     const {
-        names, lastnames, employee_code, email, shift, zone_ids, role,
-        temporal_password // --> CORRECCIÓN: El nombre correcto de la variable
+        names, lastnames, employee_code, email, shift, zone_ids, rol,
+        password
     } = req.body;
 
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        const hashedPassword = await bcrypt.hash(temporal_password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
         const userInsertQuery = `INSERT INTO users (names, lastnames, email, password) VALUES ($1, $2, $3, $4) RETURNING id;`;
         const userResult = await client.query(userInsertQuery, [names, lastnames, email, hashedPassword]);
         const newUserId = userResult.rows[0].id;
 
-        if (role === 'Empleado') {
+        if (rol === 'Empleado') {
             const employeeInsertQuery = 'INSERT INTO employees (users_id, employee_code, shift) VALUES ($1, $2, $3);';
             await client.query(employeeInsertQuery, [newUserId, employee_code, shift]);
             if (zone_ids && zone_ids.length > 0) {
@@ -54,7 +53,7 @@ app.post('/api/admin/create-user', authenticateToken, async (req, res) => { // -
                     await client.query(assignmentQuery, [newUserId, zoneId]);
                 }
             }
-        } else if (role === 'Admin') {
+        } else if (rol === 'Admin') {
             const adminInsertQuery = 'INSERT INTO admins (users_id) VALUES ($1);';
             await client.query(adminInsertQuery, [newUserId]);
         } else {
@@ -62,7 +61,7 @@ app.post('/api/admin/create-user', authenticateToken, async (req, res) => { // -
         }
 
         await client.query('COMMIT');
-        res.status(201).json({ message: `Usuario '${email}' creado exitosamente como ${role}.`, userId: newUserId });
+        res.status(201).json({ message: `Usuario '${email}' creado exitosamente como ${rol}.`, userId: newUserId });
     } catch (error) {
         await client.query('ROLLBACK');
         console.error('Error al crear usuario:', error);
@@ -76,7 +75,7 @@ app.post('/api/admin/create-user', authenticateToken, async (req, res) => { // -
 });
 
 // POST ZONES
-app.post('/api/zones', authenticateToken, async (req, res) => { // --> MEJORA: Endpoint protegido
+app.post('/api/zones', authenticateToken, async (req, res) => {
     if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Acceso denegado.' });
 
     const { name, flats, description, photo_url, qr_identifier } = req.body;
@@ -97,10 +96,10 @@ app.post('/api/zones', authenticateToken, async (req, res) => { // --> MEJORA: E
 });
 
 // POST ASSIGNMENTS
-app.post('/api/assignments', authenticateToken, async (req, res) => { // --> MEJORA: Endpoint protegido y nombre de la ruta más claro
+app.post('/api/assignments', authenticateToken, async (req, res) => {
     if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Acceso denegado.' });
 
-    const { users_id, zones_id } = req.body; // --> MEJORA: Nombres consistentes
+    const { users_id, zones_id } = req.body;
     if (!users_id || !zones_id) {
         return res.status(400).json({ message: 'Los campos users_id y zones_id son obligatorios.' });
     }
@@ -113,6 +112,67 @@ app.post('/api/assignments', authenticateToken, async (req, res) => { // --> MEJ
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });
+
+// ===================================================================
+// NUEVAS RUTAS PARA ASIGNACIÓN AUTOMÁTICA
+// ===================================================================
+
+// DELETE /api/assignments/clear - Elimina TODAS las asignaciones
+app.delete('/api/assignments/clear', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'Admin') {
+        return res.status(403).json({ message: 'Acceso denegado.' });
+    }
+    try {
+        // Ejecuta la consulta para borrar todos los registros de la tabla
+        await pool.query('DELETE FROM zone_assignments');
+        res.status(200).json({ message: 'Todas las asignaciones han sido eliminadas.' });
+    } catch (error) {
+        // Si hay un error (por ejemplo, una restricción de clave foránea), se captura aquí
+        console.error('ERROR AL LIMPIAR ASIGNACIONES:', error);
+        res.status(500).json({ message: 'Error interno del servidor al eliminar las asignaciones.' });
+    }
+});
+
+// POST /api/assignments/bulk - Crea múltiples asignaciones a la vez
+app.post('/api/assignments/bulk', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'Admin') {
+        return res.status(403).json({ message: 'Acceso denegado.' });
+    }
+
+    const { assignments } = req.body; // Se espera un array: [{ users_id, zones_id }, ...]
+
+    if (!assignments || !Array.isArray(assignments) || assignments.length === 0) {
+        return res.status(400).json({ message: 'Se requiere un array de asignaciones.' });
+    }
+
+    const client = await pool.connect();
+    try {
+        // Iniciar una transacción para asegurar que todas las inserciones se completen o ninguna
+        await client.query('BEGIN');
+
+        // Preparar una consulta de inserción
+        const insertQuery = 'INSERT INTO zone_assignments (users_id, zones_id) VALUES ($1, $2)';
+
+        // Ejecutar la consulta para cada asignación en el array
+        for (const assignment of assignments) {
+            await client.query(insertQuery, [assignment.users_id, assignment.zones_id]);
+        }
+
+        // Si todo va bien, confirmar la transacción
+        await client.query('COMMIT');
+        res.status(201).json({ message: `${assignments.length} asignaciones creadas exitosamente.` });
+
+    } catch (error) {
+        // Si algo falla, revertir la transacción
+        await client.query('ROLLBACK');
+        console.error('ERROR AL CREAR ASIGNACIONES EN LOTE:', error);
+        res.status(500).json({ message: 'Error interno del servidor al crear las asignaciones.' });
+    } finally {
+        // Liberar el cliente de la pool
+        client.release();
+    }
+});
+
 
 // POST REGISTER-CLEANING
 app.post('/api/cleaning-records', authenticateToken, upload.single('evidence'), async (req, res) => {
@@ -347,6 +407,79 @@ app.get('/api/cleaning-records', authenticateToken, async (req, res) => {
     }
 });
 
+app.get('/api/reports', authenticateToken, async (req, res) => {
+    // 1. Verificar que el usuario sea Administrador
+    if (req.user.role !== 'Admin') {
+        return res.status(403).json({ message: 'Acceso denegado.' });
+    }
+
+    try {
+        // 2. Obtener los filtros de la URL
+        const { reportType, startDate, endDate, employeeId } = req.query;
+
+        let query;
+        const queryParams = [];
+        const whereClauses = [];
+        let paramIndex = 1;
+
+        // 3. Construir las condiciones (WHERE) de forma dinámica y segura
+        if (startDate) {
+            whereClauses.push(`c.cleaned_at >= $${paramIndex++}`);
+            queryParams.push(startDate);
+        }
+        if (endDate) {
+            const nextDay = new Date(endDate);
+            nextDay.setDate(nextDay.getDate() + 1);
+            whereClauses.push(`c.cleaned_at < $${paramIndex++}`);
+            queryParams.push(nextDay.toISOString().split('T')[0]);
+        }
+        if (employeeId) {
+            whereClauses.push(`c.users_id = $${paramIndex++}`);
+            queryParams.push(employeeId);
+        }
+        
+        const whereString = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+        // 4. Seleccionar la consulta SQL según el tipo de reporte solicitado
+        if (reportType === 'by_employee') {
+            // Reporte de rendimiento por colaborador
+            query = `
+                SELECT 
+                    u.names || ' ' || u.lastnames AS employee_name,
+                    COUNT(c.id) AS total_cleanings,
+                    MIN(c.cleaned_at) AS first_cleaning,
+                    MAX(c.cleaned_at) AS last_cleaning
+                FROM cleaning c
+                JOIN users u ON c.users_id = u.id
+                ${whereString}
+                GROUP BY u.id, u.names, u.lastnames
+                ORDER BY total_cleanings DESC;
+            `;
+        } else {
+            // Reporte general de limpiezas (opción por defecto)
+            query = `
+                SELECT 
+                    c.id, c.cleaned_at, c.cleaning_type,
+                    u.names || ' ' || u.lastnames AS employee_name,
+                    z.name AS zone_name
+                FROM cleaning c
+                JOIN users u ON c.users_id = u.id
+                JOIN zones z ON c.zones_id = z.id
+                ${whereString}
+                ORDER BY c.cleaned_at DESC;
+            `;
+        }
+
+        // 5. Ejecutar la consulta y devolver los resultados
+        const result = await pool.query(query, queryParams);
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error('Error al generar el reporte:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
 // GET /api/users/:id - Obtiene un usuario específico por su ID
 app.get('/api/users/:id', authenticateToken, async (req, res) => {
     if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Acceso denegado.' });
@@ -565,12 +698,13 @@ app.get('/api/employee/zones', authenticateToken, async (req, res) => {
     try {
         const query = `
             SELECT 
-                za.id AS assignment_id, -- Alias para el ID de la asignación
+                za.id AS assignment_id, 
                 za.status,
-                z.id AS zone_id,       -- ID de la zona
+                z.id AS zone_id,
                 z.name,
                 z.flats,
-                z.description
+                z.description,
+                z.qr_identifier AS code
             FROM 
                 zone_assignments za
             JOIN 
@@ -585,7 +719,6 @@ app.get('/api/employee/zones', authenticateToken, async (req, res) => {
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });
-
 // POST /api/cleaning - Registrar limpieza de una zona
 app.post('/api/cleaning', authenticateToken, upload.single('evidence'), async (req, res) => {
     const userId = req.user.userId;
@@ -617,6 +750,8 @@ app.post('/api/cleaning', authenticateToken, upload.single('evidence'), async (r
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });
+
+
 
 
 app.listen(3000, () => {
