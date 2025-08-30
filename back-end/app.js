@@ -1243,7 +1243,7 @@ app.post('/api/forgot-password', async (req, res) => {
         );
 
         // ¡IMPORTANTE! CAMBIA ESTA URL POR LA RUTA REAL A TU ARCHIVO reset-password.html
-        const resetLink = `http://127.0.0.1:5500/front-end/change_password.html?token=${token}`;
+        const resetLink = `https://vocal-peony-3f0286.netlify.app/change_password.html?token=${token}`;
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {

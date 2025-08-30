@@ -1,3 +1,6 @@
+// 1. URL base de tu API desplegada en Render
+export const API_BASE_URL = 'https://cleantrack-api.onrender.com';
+
 // Función para obtener el token guardado en localStorage
 const getToken = () => localStorage.getItem('authToken');
 
@@ -21,7 +24,10 @@ const request = async (endpoint, method = 'GET', body = null) => {
     }
 
     try {
-        const response = await fetch(`http://localhost:3000${endpoint}`, config);
+        // --- CAMBIO AQUÍ ---
+        // Ahora usa la variable API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+        
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || `Error ${response.status}`);
@@ -42,11 +48,14 @@ const requestWithFile = async (endpoint, formData, method = 'POST') => {
     }
 
     try {
-        const response = await fetch(`http://localhost:3000${endpoint}`, {
-            method,   // 👈 Ahora usa el que le pases
+        // --- CAMBIO AQUÍ ---
+        // Ahora usa la variable API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method,
             headers,
             body: formData
         });
+
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || `Error ${response.status}`);
@@ -57,6 +66,5 @@ const requestWithFile = async (endpoint, formData, method = 'POST') => {
         throw error;
     }
 };
-
 
 export { request, requestWithFile };
