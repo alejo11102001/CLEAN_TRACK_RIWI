@@ -27,6 +27,88 @@ const authenticateToken = (req, res, next) => {
 
 // --- ENDPOINTS ---
 
+// GET DASHBOARD STATS
+app.get("/api/dashboard/stats", authenticateToken, async (req, res) => {
+try {
+    const cleaningsTodayResult = await pool.query(
+    "SELECT COUNT(*) AS total FROM cleaning WHERE DATE(cleaned_at AT TIME ZONE 'UTC') = (NOW() AT TIME ZONE 'UTC')::date"
+    );
+
+    const pendingZonesResult = await pool.query(`
+    SELECT COUNT(*) AS pending_zones
+    FROM zones z
+    WHERE NOT EXISTS (
+        SELECT 1 FROM cleaning c
+        WHERE c.zones_id = z.id
+        AND DATE(c.cleaned_at AT TIME ZONE 'UTC') = (NOW() AT TIME ZONE 'UTC')::date
+    )
+    `);
+
+    const collaboratorsResult = await pool.query(`
+    SELECT COUNT(*) AS collaborators
+    FROM employees e
+    JOIN users u ON u.id = e.users_id
+    WHERE u.is_active = TRUE
+    `);
+
+    const cleaningsMonthResult = await pool.query(`
+    SELECT COUNT(*) AS cleanings_month
+    FROM cleaning
+    WHERE DATE_TRUNC('month', cleaned_at AT TIME ZONE 'UTC') = DATE_TRUNC('month', NOW() AT TIME ZONE 'UTC')
+    `);
+
+    res.json({
+    cleaningsToday: cleaningsTodayResult.rows[0].total,
+    pendingZones: pendingZonesResult.rows[0].pending_zones,
+    collaborators: collaboratorsResult.rows[0].collaborators,
+    cleaningsMonth: cleaningsMonthResult.rows[0].cleanings_month
+    });
+} catch (err) {
+    console.error("Error getting dashboard statistics:", err);
+    res.status(500).json({ error: "Error getting statistics" });
+}
+});
+
+// GET WEEKLY ACTIVITY
+app.get("/api/dashboard/activity", authenticateToken, async (req, res) => {
+try {
+    const activityResult = await pool.query(`
+    SELECT
+        TO_CHAR(cleaned_at AT TIME ZONE 'UTC', 'Day') AS day,
+        COUNT(*) AS total
+    FROM
+        cleaning
+    WHERE
+        cleaned_at >= (NOW() AT TIME ZONE 'UTC') - INTERVAL '7 days'
+    GROUP BY
+        day
+    `);
+    res.json(activityResult.rows);
+} catch (err) {
+    console.error("Error getting weekly activity:", err);
+    res.status(500).json({ error: "Error getting weekly activity" });
+}
+});
+
+// GET RECENT RECORDS
+app.get("/api/dashboard/records", authenticateToken, async (req, res) => {
+try {
+    const recordsResult = await pool.query(`
+    SELECT c.id, u.names, z.name AS zone_name, c.cleaned_at, c.status
+    FROM cleaning c
+    LEFT JOIN users u ON c.users_id = u.id
+    JOIN zones z ON c.zones_id = z.id
+    ORDER BY c.cleaned_at DESC
+    LIMIT 5
+    `);
+    res.json(recordsResult.rows);
+} catch (err) {
+    console.error("Error getting recent records:", err);
+    res.status(500).json({ error: "Error getting recent records" });
+}
+});
+
+
 // POST EMPLOYEE, ADMIN
 app.post('/api/admin/users', authenticateToken, async (req, res) => {
     if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Acceso denegado.' });
@@ -175,11 +257,9 @@ app.post('/api/assignments/bulk', authenticateToken, async (req, res) => {
 
 
 // POST REGISTER-CLEANING
+// POST /api/cleaning-records - El empleado registra una limpieza (VERSIÓN DEFINITIVA)
 app.post('/api/cleaning-records', authenticateToken, upload.single('evidence'), async (req, res) => {
-    if (req.user.role !== 'Empleado') {
-        return res.status(403).json({ message: 'Acceso denegado.' });
-    }
-
+    // 1. Aceptamos todos los campos que envía tu formulario
     const { zoneId, assignmentId, cleaningType, observations, image_hash } = req.body;
     const evidenceFile = req.file;
     const userId = req.user.userId;
@@ -188,40 +268,48 @@ app.post('/api/cleaning-records', authenticateToken, upload.single('evidence'), 
         return res.status(400).json({ message: 'Faltan datos obligatorios (zona, asignación, tipo o evidencia).' });
     }
 
-    const evidence_url = `https://storage.example.com/${evidenceFile.filename}`;
+    const evidence_url = `/uploads/${evidenceFile.filename}`;
+    const client = await pool.connect();
 
     try {
-        // 1. Insertar en tabla cleaning
+        // Iniciamos una transacción para realizar 3 operaciones de forma segura
+        await client.query('BEGIN');
+
+        // OPERACIÓN 1: Insertar el registro en la tabla 'cleaning' (como lo tenías)
         const insertQuery = `
             INSERT INTO cleaning (users_id, zones_id, cleaning_type, observations, evidence, image_hash, status)
-            VALUES ($1, $2, $3, $4, $5, $6, 'Completado')
-            RETURNING id;
+            VALUES ($1, $2, $3, $4, $5, $6, 'Completado') RETURNING id;
         `;
-        const insertResult = await pool.query(insertQuery, [
-            userId,
-            zoneId,
-            cleaningType,
-            observations,
-            evidence_url,
-            image_hash
-        ]);
+        const insertResult = await client.query(insertQuery, [userId, zoneId, cleaningType, observations, evidence_url, image_hash]);
 
-        // 2. Actualizar asignación como completada
-        const updateQuery = `
-            UPDATE zone_assignments
-            SET status = 'Completada'
-            WHERE id = $1
+        // OPERACIÓN 2: Actualizar la tabla 'zone_assignments' (como lo tenías)
+        const updateAssignmentQuery = `UPDATE zone_assignments SET status = 'Completada' WHERE id = $1`;
+        await client.query(updateAssignmentQuery, [assignmentId]);
+
+        // OPERACIÓN 3: ¡LA CORRECCIÓN PARA EL MAPA! Actualizar la tabla 'zones'
+        const updateZoneQuery = `
+            UPDATE zones 
+            SET last_cleaned_at = NOW(), last_cleaned_by = $1, last_cleaning_type = $2 
+            WHERE id = $3;
         `;
-        await pool.query(updateQuery, [assignmentId]);
-
+        await client.query(updateZoneQuery, [userId, cleaningType, zoneId]);
+        
+        // Si las 3 operaciones fueron exitosas, confirmamos los cambios
+        await client.query('COMMIT');
+        
         res.status(201).json({
-            message: 'Registro de limpieza creado y asignación marcada como completada.',
+            message: 'Registro creado y estados actualizados correctamente.',
             recordId: insertResult.rows[0].id
         });
 
     } catch (error) {
-        console.error(error);
+        // Si alguna de las 3 operaciones falla, revertimos todo
+        await client.query('ROLLBACK');
+        console.error("Error al registrar limpieza:", error);
         res.status(500).json({ message: 'Error al guardar el registro.' });
+    } finally {
+        // Liberamos la conexión
+        client.release();
     }
 });
 
@@ -855,8 +943,42 @@ app.post('/api/reports', authenticateToken, async (req, res) => {
     }
 });
 
+// GET /api/admin/zones - Obtiene todas las zonas con su estado y responsable
+app.get('/api/admin/zones', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                z.id, z.name, z.flats, z.qr_identifier, z.last_cleaning_type,
+                -- AQUI SE CALCULA EL ESTADO: Compara si la última limpieza fue hoy.
+                CASE 
+                    WHEN TO_CHAR(z.last_cleaned_at AT TIME ZONE 'UTC', 'YYYY-MM-DD') = TO_CHAR(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD')
+                    THEN 'Completado'
+                    ELSE 'Pendiente'
+                END AS status,
+                u_cleaned.names AS last_cleaned_by_name,
+                -- AQUI SE OBTIENE EL EMPLEADO ASIGNADO: Une las tablas para encontrar el nombre.
+                u_assigned.names || ' ' || u_assigned.lastnames AS assigned_employee_name
+            FROM zones z
+            LEFT JOIN users u_cleaned ON z.last_cleaned_by = u_cleaned.id
+            LEFT JOIN zone_assignments za ON z.id = za.zones_id
+            LEFT JOIN users u_assigned ON za.users_id = u_assigned.id
+            ORDER BY z.flats, z.name;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch(error) {
+        console.error('Error al obtener las zonas:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
 
 
 app.listen(3000, () => {
     console.log('Servidor corriendo en http://localhost:3000');
 });
+
+
+
+
+
