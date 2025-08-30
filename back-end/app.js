@@ -307,7 +307,10 @@ app.post('/api/cleaning-records', authenticateToken, upload.single('evidence'), 
 
     const evidence_url = evidenceFile.location; 
 
+    let client;
+
     try {
+        client = await pool.connect();
         // Iniciamos una transacción para realizar 3 operaciones de forma segura
         await client.query('BEGIN');
 
@@ -340,12 +343,16 @@ app.post('/api/cleaning-records', authenticateToken, upload.single('evidence'), 
 
     } catch (error) {
         // Si alguna de las 3 operaciones falla, revertimos todo
-        await client.query('ROLLBACK');
+        if (client){
+            await client.query('ROLLBACK');
+        }
         console.error("Error al registrar limpieza:", error);
         res.status(500).json({ message: 'Error al guardar el registro.' });
     } finally {
         // Liberamos la conexión
-        client.release();
+        if (client) {
+            client.release();
+        }
     }
 });
 
