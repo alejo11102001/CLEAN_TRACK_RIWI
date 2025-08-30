@@ -1,6 +1,5 @@
-import {
-    request
-} from './api.js';
+import {request} from './api.js';
+import { requestWithFile } from './api.js';
 const logoutButton = document.getElementById('logoutButton');
 
 // ===================================================================
@@ -232,13 +231,23 @@ async function renderCleaningRecords() {
         }
 
         records.forEach(rec => {
+            const evidenceButtonHTML = rec.evidence ?
+                `<button type="button" class="btn btn-sm btn-outline-secondary view-evidence-btn" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#evidenceModal" 
+                        data-image-url="${rec.evidence}"
+                        data-zone-name="${rec.zone_name}">
+                    Ver
+                </button>` :
+                `<button class="btn btn-sm btn-outline-secondary" disabled>N/A</button>`;
+
             tableBody.innerHTML += `
                 <tr>
                     <td>${rec.zone_name}</td>
                     <td>${rec.employee_name}</td>
                     <td><span class="badge bg-info">${rec.cleaning_type}</span></td>
                     <td>${new Date(rec.cleaned_at).toLocaleString()}</td>
-                    <td><button class="btn btn-sm btn-outline-secondary" onclick="window.open('${rec.evidence}', '_blank')">Ver</button></td>
+                    <td>${evidenceButtonHTML}</td>
                     <td>${rec.observations || '-'}</td>
                 </tr>
             `;
@@ -297,9 +306,13 @@ async function renderUsers() {
         }
 
         users.forEach(user => {
-            const statusBadge = user.rol === 'Empleado' ?
-                `<span class="badge bg-${user.is_active ? 'success' : 'secondary'}">${user.is_active ? 'Activo' : 'Inactivo'}</span>` :
-                '';
+            let statusBadge = '';
+            if (user.rol === 'Empleado') {
+                statusBadge = `<span class="badge bg-${user.is_active ? 'success' : 'secondary'}">${user.is_active ? 'Activo' : 'Inactivo'}</span>`;
+            } else if (user.rol === 'Admin') {
+                // Los admins no tienen estado 'inactivo' en este sistema, por lo que siempre están activos.
+                statusBadge = `<span class="badge bg-success">Activo</span>`;
+            }
 
             tableBody.innerHTML += `
                 <tr>
@@ -898,30 +911,34 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('rolUsuario').dispatchEvent(new Event('change'));
     });
 
-    document.getElementById('formNuevaZona').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const form = event.target;
-        const editingId = form.dataset.editingId;
-        const zoneData = {
-            name: document.getElementById('nombreZona').value,
-            flats: parseInt(document.getElementById('pisoZona').value),
-            qr_identifier: document.getElementById('qrIdentifier').value,
-            description: document.getElementById('descripcionZona').value,
-        };
-        try {
-            if (editingId) {
-                await request(`/api/zones/${editingId}`, 'PUT', zoneData);
-                Swal.fire('¡Actualizada!', 'La zona ha sido actualizada.', 'success');
-            } else {
-                await request('/api/zones', 'POST', zoneData);
-                Swal.fire('¡Creada!', 'La nueva zona ha sido creada.', 'success');
-            }
-            bootstrap.Modal.getInstance(document.getElementById('modalNuevaZona')).hide();
-            renderZones();
-        } catch (error) {
-            Swal.fire('Error', `No se pudo guardar la zona: ${error.message}`, 'error');
+
+document.getElementById('formNuevaZona').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const editingId = form.dataset.editingId;
+
+    // 1. Crear un objeto FormData a partir del formulario.
+    // Esto empaqueta automáticamente todos los campos, INCLUYENDO EL ARCHIVO.
+    const formData = new FormData(form);
+
+    try {
+        if (editingId) {
+            // Lógica para editar (también usa FormData)
+            await requestWithFile(`/api/zones/${editingId}`, formData, 'PUT');
+            Swal.fire('¡Actualizada!', 'La zona ha sido actualizada.', 'success');
+        } else {
+            // 2. Usar 'requestWithFile' para enviar el FormData al crear.
+            await requestWithFile('/api/zones', formData, 'POST');
+            Swal.fire('¡Creada!', 'La nueva zona ha sido creada.', 'success');
         }
-    });
+        
+        bootstrap.Modal.getInstance(document.getElementById('modalNuevaZona')).hide();
+        renderZones();
+
+    } catch (error) {
+        Swal.fire('Error', `No se pudo guardar la zona: ${error.message}`, 'error');
+    }
+});
 
     document.getElementById('modalNuevaZona').addEventListener('hidden.bs.modal', () => {
         const form = document.getElementById('formNuevaZona');
@@ -1019,6 +1036,103 @@ document.addEventListener('DOMContentLoaded', () => {
             icon.classList.toggle('bi-arrow-bar-right');
         });
     }
+
+    const evidenceModal = document.getElementById('evidenceModal');
+    if (evidenceModal) {
+        // Evento que se dispara JUSTO ANTES de que el modal se muestre
+        evidenceModal.addEventListener('show.bs.modal', function (event) {
+            // Obtiene el botón que activó el modal
+            const button = event.relatedTarget;
+            
+            // Extrae la información de los atributos data-*
+            const imageUrl = button.getAttribute('data-image-url');
+            const zoneName = button.getAttribute('data-zone-name');
+
+            // Selecciona los elementos dentro del modal
+            const modalTitle = evidenceModal.querySelector('.modal-title');
+            const modalImage = evidenceModal.querySelector('#modalImage');
+
+            // Actualiza el contenido del modal
+            modalTitle.textContent = `Evidencia de: ${zoneName}`;
+            modalImage.src = imageUrl;
+        });
+
+        // Opcional pero recomendado: Limpia la imagen cuando el modal se cierra
+        evidenceModal.addEventListener('hide.bs.modal', function () {
+            const modalImage = evidenceModal.querySelector('#modalImage');
+            modalImage.src = ''; // Evita que se vea la imagen anterior brevemente
+        });
+    }
+
+// --- LÓGICA PARA EL MODAL "MI PERFIL" ---
+
+// 1. Lógica para ABRIR y RELLENAR el modal
+document.body.addEventListener('click', async (event) => {
+    if (event.target.id === 'openProfileModalBtn') {
+        try {
+            const admin = await request('/api/admin/profile');
+            document.getElementById('perfilNombre').value = `${admin.names} ${admin.lastnames}`;
+            document.getElementById('perfilEmail').value = admin.email;
+        } catch (error) {
+            Swal.fire('Error', 'No se pudo cargar la información del perfil.', 'error');
+        }
+    }
+});
+
+// 2. Lógica para GUARDAR los cambios del perfil
+const profileForm = document.getElementById('formMiPerfil');
+if (profileForm) {
+    profileForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const fullName = document.getElementById('perfilNombre').value;
+        const email = document.getElementById('perfilEmail').value;
+
+        // Dividimos el nombre completo en nombre y apellido
+        const nameParts = fullName.split(' ');
+        const names = nameParts.shift(); // El primer elemento
+        const lastnames = nameParts.join(' '); // El resto
+
+        try {
+            await request('/api/admin/profile', 'PUT', { names, lastnames, email });
+            Swal.fire('¡Actualizado!', 'Tu perfil ha sido actualizado.', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('modalMiPerfil')).hide();
+
+            // Actualizamos el nombre en la barra lateral también
+            document.getElementById('admin-name-display').textContent = fullName;
+        } catch (error) {
+            Swal.fire('Error', `No se pudo actualizar el perfil: ${error.message}`, 'error');
+        }
+    });
+}
+
+// --- LÓGICA PARA EL MODAL "CAMBIAR CONTRASEÑA" ---
+const changePasswordForm = document.getElementById('formCambiarPassword');
+if(changePasswordForm) {
+    changePasswordForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const currentPassword = document.getElementById('passwordActual').value;
+        const newPassword = document.getElementById('passwordNueva').value;
+        const confirmPassword = document.getElementById('passwordConfirmar').value;
+
+        // Validación en el frontend
+        if (newPassword !== confirmPassword) {
+            Swal.fire('Error', 'Las nuevas contraseñas no coinciden.', 'error');
+            return;
+        }
+
+        try {
+            await request('/api/admin/change-password', 'POST', { currentPassword, newPassword });
+            
+            Swal.fire('¡Éxito!', 'Tu contraseña ha sido cambiada.', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('modalCambiarPassword')).hide();
+            changePasswordForm.reset();
+
+        } catch (error) {
+            Swal.fire('Error', `No se pudo cambiar la contraseña: ${error.message}`, 'error');
+        }
+    });
+}
 
     loadAdminInfo();
     loadView('dashboard');

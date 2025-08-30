@@ -4,12 +4,46 @@ import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import pool from './db.js';
 import multer from 'multer';
-
-const upload = multer({ dest: 'uploads/' });
+import { S3Client } from "@aws-sdk/client-s3";     
+import multerS3 from 'multer-s3';   
+import 'dotenv/config';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// 1. NUEVA forma de crear el cliente S3 (v3)
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    }
+});
+
+// 2. Multer ahora usa el nuevo cliente S3 v3
+const upload = multer({
+    storage: multerS3({
+        s3: s3Client, // <-- Se pasa el nuevo cliente aquí
+        bucket: process.env.AWS_S3_BUCKET_NAME,
+        metadata: function (req, file, cb) {
+            cb(null, { fieldName: file.fieldname });
+        },
+        key: function (req, file, cb) {
+            // Obtenemos el ID de la zona desde el cuerpo del formulario (req.body)
+            const zoneId = req.body.zoneId || 'desconocida';
+            const timestamp = Date.now();
+
+            // Limpiamos el nombre original para evitar caracteres problemáticos
+            const cleanOriginalName = file.originalname.replace(/[^a-zA-Z0-9.]/g, '-');
+
+            // Construimos la ruta y el nombre final del archivo
+            const fileName = `evidencias/zona-${zoneId}/${timestamp}-${cleanOriginalName}`;
+
+            cb(null, fileName);
+        }
+    })
+});
 
 const JWT_SECRET = 'tu_clave_secreta_super_segura_aqui';
 
@@ -75,10 +109,13 @@ app.post('/api/admin/users', authenticateToken, async (req, res) => {
 });
 
 // POST ZONES
-app.post('/api/zones', authenticateToken, async (req, res) => {
+app.post('/api/zones', authenticateToken, upload.single('photo'), async (req, res) => {
     if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Acceso denegado.' });
 
-    const { name, flats, description, photo_url, qr_identifier } = req.body;
+    const { name, flats, description, qr_identifier } = req.body;
+    // La URL de la imagen ahora viene de req.file.location si se subió un archivo
+    const photo_url = req.file ? req.file.location : null;
+
     if (!name || !flats || !qr_identifier) {
         return res.status(400).json({ message: 'Los campos nombre, piso y qr_identifier son obligatorios.' });
     }
@@ -188,7 +225,7 @@ app.post('/api/cleaning-records', authenticateToken, upload.single('evidence'), 
         return res.status(400).json({ message: 'Faltan datos obligatorios (zona, asignación, tipo o evidencia).' });
     }
 
-    const evidence_url = `https://storage.example.com/${evidenceFile.filename}`;
+    const evidence_url = evidenceFile.location; 
 
     try {
         // 1. Insertar en tabla cleaning
@@ -318,6 +355,7 @@ app.get('/api/employees', authenticateToken, async (req, res) => {
                 u.id, u.names, u.lastnames, u.email, e.employee_code, e.shift
             FROM users u
             INNER JOIN employees e ON u.id = e.users_id
+            WHERE u.is_active = TRUE
             ORDER BY u.names;
         `;
         const result = await pool.query(query);
@@ -489,7 +527,7 @@ app.get('/api/users/:id', authenticateToken, async (req, res) => {
     try {
         const query = `
             SELECT 
-                u.id, u.names, u.lastnames, u.email,
+                u.id, u.names, u.lastnames, u.email, u.is_active,
                 CASE 
                     WHEN a.users_id IS NOT NULL THEN 'Admin'
                     WHEN e.users_id IS NOT NULL THEN 'Empleado'
@@ -516,25 +554,35 @@ app.get('/api/users/:id', authenticateToken, async (req, res) => {
 // PUT /api/admin/users/:id - Actualizar un usuario
 app.put('/api/admin/users/:id', authenticateToken, async (req, res) => {
     if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Acceso denegado.' });
+    
     const { id } = req.params;
-    const { names, lastnames, email, role, shift, employee_code } = req.body;
+    const { names, lastnames, email, rol, shift, employee_code, is_active } = req.body;
+
     try {
         await pool.query('BEGIN');
-        await pool.query('UPDATE users SET names = $1, lastnames = $2, email = $3 WHERE id = $4', [names, lastnames, email, id]);
         
-        // Lógica para actualizar el rol
-        if (role === 'Empleado') {
+        // ✨ 2. ACTUALIZAMOS también la columna 'is_active' en la tabla 'users'
+        const updateUserQuery = `
+            UPDATE users 
+            SET names = $1, lastnames = $2, email = $3, is_active = $4 
+            WHERE id = $5
+        `;
+        await pool.query(updateUserQuery, [names, lastnames, email, is_active, id]);
+        
+        // La lógica para actualizar el rol se mantiene igual
+        if (rol === 'Empleado') {
             await pool.query('INSERT INTO employees (users_id, employee_code, shift) VALUES ($1, $2, $3) ON CONFLICT (users_id) DO UPDATE SET employee_code = $2, shift = $3;', [id, employee_code, shift]);
             await pool.query('DELETE FROM admins WHERE users_id = $1', [id]);
-        } else if (role === 'Admin') {
+        } else if (rol === 'Admin') {
             await pool.query('INSERT INTO admins (users_id) VALUES ($1) ON CONFLICT (users_id) DO NOTHING', [id]);
             await pool.query('DELETE FROM employees WHERE users_id = $1', [id]);
         }
+
         await pool.query('COMMIT');
         res.json({ message: 'Usuario actualizado con éxito.' });
     } catch (error) {
         await pool.query('ROLLBACK');
-        console.error(error);
+        console.error('Error al actualizar usuario:', error);
         res.status(500).json({ message: 'Error al actualizar.' });
     }
 });
@@ -568,12 +616,15 @@ app.get('/api/zones/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// PUT /api/zones/:id - Actualizar una zona
-app.put('/api/zones/:id', authenticateToken, async (req, res) => {
+// PUT /api/zones/:id 
+app.put('/api/zones/:id', authenticateToken, upload.single('photo'), async (req, res) => {
     if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Acceso denegado.' });
-    
+
     const { id } = req.params;
-    const { name, flats, description, qr_identifier } = req.body;
+    const { name, flats, description, qr_identifier, existing_photo_url } = req.body;
+
+    // Si se sube una nueva foto, usamos su URL. Si no, mantenemos la existente que envía el frontend.
+    const photo_url = req.file ? req.file.location : existing_photo_url;
 
     if (!name || !flats || !qr_identifier) {
         return res.status(400).json({ message: 'Faltan campos obligatorios.' });
@@ -582,11 +633,11 @@ app.put('/api/zones/:id', authenticateToken, async (req, res) => {
     try {
         const query = `
             UPDATE zones 
-            SET name = $1, flats = $2, description = $3, qr_identifier = $4 
-            WHERE id = $5 
+            SET name = $1, flats = $2, description = $3, qr_identifier = $4, photo = $5
+            WHERE id = $6 
             RETURNING *;
         `;
-        const result = await pool.query(query, [name, flats, description, qr_identifier, id]);
+        const result = await pool.query(query, [name, flats, description, qr_identifier, photo_url, id]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Zona no encontrada.' });
@@ -704,7 +755,8 @@ app.get('/api/employee/zones', authenticateToken, async (req, res) => {
                 z.name,
                 z.flats,
                 z.description,
-                z.qr_identifier AS code
+                z.qr_identifier AS code,
+                z.photo
             FROM 
                 zone_assignments za
             JOIN 
@@ -855,7 +907,101 @@ app.post('/api/reports', authenticateToken, async (req, res) => {
     }
 });
 
+// GET /api/admin/profile - Obtiene la información del admin logueado
+app.get('/api/admin/profile', authenticateToken, async (req, res) => {
+    // Verificamos que el rol sea Admin (aunque ya está implícito por la ruta)
+    if (req.user.role !== 'Admin') {
+        return res.status(403).json({ message: 'Acceso denegado. Solo para administradores.' });
+    }
+    
+    try {
+        const userId = req.user.userId;
+        const result = await pool.query(
+            'SELECT names, lastnames, email FROM users WHERE id = $1',
+            [userId]
+        );
 
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Perfil de administrador no encontrado.' });
+        }
+
+        res.json(result.rows[0]);
+
+    } catch (error) {
+        console.error('Error al obtener el perfil del admin:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+// PUT /api/admin/profile - Actualiza el perfil del admin logueado
+app.put('/api/admin/profile', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'Admin') {
+        return res.status(403).json({ message: 'Acceso denegado.' });
+    }
+    
+    const userId = req.user.userId;
+    const { names, lastnames, email } = req.body;
+
+    if (!names || !email) {
+        return res.status(400).json({ message: 'El nombre y el email son obligatorios.' });
+    }
+
+    try {
+        const query = `
+            UPDATE users 
+            SET names = $1, lastnames = $2, email = $3 
+            WHERE id = $4 
+            RETURNING names, lastnames, email;
+        `;
+        const result = await pool.query(query, [names, lastnames, email, userId]);
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error al actualizar perfil:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+// EN TU ARCHIVO: app.js
+// Añade este nuevo endpoint
+
+// POST /api/admin/change-password - Cambia la contraseña del admin logueado
+app.post('/api/admin/change-password', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'Admin') {
+        return res.status(403).json({ message: 'Acceso denegado.' });
+    }
+    
+    const userId = req.user.userId;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
+    }
+
+    try {
+        // 1. Obtener la contraseña actual hasheada del usuario
+        const userResult = await pool.query('SELECT password FROM users WHERE id = $1', [userId]);
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
+        }
+        const hashedPassword = userResult.rows[0].password;
+
+        // 2. Comparar la contraseña actual enviada con la de la BD
+        const isMatch = await bcrypt.compare(currentPassword, hashedPassword);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'La contraseña actual es incorrecta.' });
+        }
+
+        // 3. Hashear y guardar la nueva contraseña
+        const newHashedPassword = await bcrypt.hash(newPassword, 10);
+        await pool.query('UPDATE users SET password = $1 WHERE id = $2', [newHashedPassword, userId]);
+
+        res.json({ message: 'Contraseña actualizada exitosamente.' });
+
+    } catch (error) {
+        console.error('Error al cambiar contraseña:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
 
 app.listen(3000, () => {
     console.log('Servidor corriendo en http://localhost:3000');

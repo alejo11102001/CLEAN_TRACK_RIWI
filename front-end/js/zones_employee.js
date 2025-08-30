@@ -39,6 +39,10 @@ const loadAssignedZones = async () => {
             container.innerHTML += `
                 <div class="col-12 col-md-6 col-lg-4 zone-card-wrapper" data-status="${statusClass}" id="assignment-card-${zone.assignment_id}">
                     <div class="card card-zone h-100">
+                        ${zone.photo ? 
+                            `<img src="${zone.photo}" class="card-img-top zone-image" alt="Foto de ${zone.name}">` : 
+                            '<div class="zone-image-placeholder"><i class="bi bi-camera fs-1 text-muted"></i></div>'
+                        }
                         <div class="card-status-bar ${statusClass === 'pendiente' ? 'status-pending' : 'status-completed'}"></div>
                         <div class="card-body d-flex flex-column">
                             <div class="zone-icon"><i class="bi bi-geo-alt-fill"></i></div>
