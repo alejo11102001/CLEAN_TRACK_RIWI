@@ -7,6 +7,8 @@ import multer from 'multer';
 import { S3Client } from "@aws-sdk/client-s3";     
 import multerS3 from 'multer-s3';   
 import 'dotenv/config';
+import crypto from 'crypto';
+import nodemailer from 'nodemailer';
 
 const app = express();
 app.use(cors());
@@ -45,7 +47,7 @@ const upload = multer({
     })
 });
 
-const JWT_SECRET = 'tu_clave_secreta_super_segura_aqui';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -292,8 +294,6 @@ app.post('/api/assignments/bulk', authenticateToken, async (req, res) => {
     }
 });
 
-
-// POST REGISTER-CLEANING
 // POST /api/cleaning-records - El empleado registra una limpieza (VERSIÓN DEFINITIVA)
 app.post('/api/cleaning-records', authenticateToken, upload.single('evidence'), async (req, res) => {
     // 1. Aceptamos todos los campos que envía tu formulario
@@ -1001,50 +1001,33 @@ app.post('/api/reports', authenticateToken, async (req, res) => {
     }
 });
 
-// GET /api/admin/zones - Obtiene todas las zonas con su estado y responsable
-app.get('/api/admin/zones', async (req, res) => {
+// GET /api/admin/zones - Obtiene todas las zonas con su estado y responsable (LÓGICA MEJORADA)
+app.get('/api/admin/zones', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Acceso denegado.' });
     try {
         const query = `
             SELECT 
-                z.id, z.name, z.flats, z.qr_identifier, z.last_cleaning_type,
-                -- AQUI SE CALCULA EL ESTADO: Compara si la última limpieza fue hoy.
-                CASE 
-                    WHEN TO_CHAR(z.last_cleaned_at AT TIME ZONE 'UTC', 'YYYY-MM-DD') = TO_CHAR(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD')
-                    THEN 'Completado'
-                    ELSE 'Pendiente'
-                END AS status,
+                z.id, 
+                z.name, 
+                z.flats, 
+                z.qr_identifier, 
+                z.last_cleaning_type,
                 u_cleaned.names AS last_cleaned_by_name,
-                -- AQUI SE OBTIENE EL EMPLEADO ASIGNADO: Une las tablas para encontrar el nombre.
-                u_assigned.names || ' ' || u_assigned.lastnames AS assigned_employee_name
-            FROM zones z
-            LEFT JOIN users u_cleaned ON z.last_cleaned_by = u_cleaned.id
-            LEFT JOIN zone_assignments za ON z.id = za.zones_id
-            LEFT JOIN users u_assigned ON za.users_id = u_assigned.id
-            ORDER BY z.flats, z.name;
-        `;
-        const result = await pool.query(query);
-        res.json(result.rows);
-    } catch(error) {
-        console.error('Error al obtener las zonas:', error);
-        res.status(500).json({ message: 'Error interno del servidor.' });
-    }
-});
+                u_assigned.names || ' ' || u_assigned.lastnames AS assigned_employee_name,
+                
+                -- LÓGICA DE ESTADO MEJORADA:
+                CASE 
+                    -- Si hay una asignación COMPLETADA y fue en las últimas 6 horas, está VERDE.
+                    WHEN za.status = 'Completada' AND z.last_cleaned_at > NOW() - INTERVAL '6 hours' THEN 'Completado'
+                    
+                    -- En CUALQUIER OTRO CASO, está ROJA.
+                    -- Esto incluye:
+                    -- 1. No tiene asignación.
+                    -- 2. La asignación está 'Pendiente'.
+                    -- 3. La asignación fue completada hace más de 6 horas.
+                    ELSE 'Pendiente'
+                END AS status
 
-// GET /api/admin/zones - Obtiene todas las zonas con su estado y responsable
-app.get('/api/admin/zones', async (req, res) => {
-    try {
-        const query = `
-            SELECT 
-                z.id, z.name, z.flats, z.qr_identifier, z.last_cleaning_type,
-                -- AQUI SE CALCULA EL ESTADO: Compara si la última limpieza fue hoy.
-                CASE 
-                    WHEN TO_CHAR(z.last_cleaned_at AT TIME ZONE 'UTC', 'YYYY-MM-DD') = TO_CHAR(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD')
-                    THEN 'Completado'
-                    ELSE 'Pendiente'
-                END AS status,
-                u_cleaned.names AS last_cleaned_by_name,
-                -- AQUI SE OBTIENE EL EMPLEADO ASIGNADO: Une las tablas para encontrar el nombre.
-                u_assigned.names || ' ' || u_assigned.lastnames AS assigned_employee_name
             FROM zones z
             LEFT JOIN users u_cleaned ON z.last_cleaned_by = u_cleaned.id
             LEFT JOIN zone_assignments za ON z.id = za.zones_id
@@ -1054,7 +1037,7 @@ app.get('/api/admin/zones', async (req, res) => {
         const result = await pool.query(query);
         res.json(result.rows);
     } catch(error) {
-        console.error('Error al obtener las zonas:', error);
+        console.error('Error al obtener el estado de las zonas:', error);
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });
@@ -1155,10 +1138,6 @@ app.post('/api/admin/change-password', authenticateToken, async (req, res) => {
     }
 });
 
-app.listen(3000, () => {
-    console.log('Servidor corriendo en http://localhost:3000');
-});
-
 // --- ENDPOINTS ---
 // ==========================================================
 // DASHBOARD ENDPOINTS (TRANSLATED & TIMEZONE-FIXED)
@@ -1243,4 +1222,89 @@ app.get("/api/dashboard/records", authenticateToken, async (req, res) => {
         console.error("Error getting recent records:", err);
         res.status(500).json({ error: "Error getting recent records" });
     }
+});
+
+// ENDPOINT PARA SOLICITAR EL CORREO DE RECUPERACIÓN
+app.post('/api/forgot-password', async (req, res) => {
+    const { email } = req.body;
+    try {
+        const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (userResult.rows.length === 0) {
+            return res.json({ message: 'Si tu correo está registrado, recibirás un enlace para restablecer tu contraseña.' });
+        }
+        const user = userResult.rows[0];
+
+        const token = crypto.randomBytes(32).toString('hex');
+        const expires = new Date(Date.now() + 3600000); // Token válido por 1 hora
+
+        await pool.query(
+            'UPDATE users SET password_reset_token = $1, password_reset_expires = $2 WHERE id = $3',
+            [token, expires, user.id]
+        );
+
+        // ¡IMPORTANTE! CAMBIA ESTA URL POR LA RUTA REAL A TU ARCHIVO reset-password.html
+        const resetLink = `http://127.0.0.1:5500/front-end/change_password.html?token=${token}`;
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        });
+
+        await transporter.sendMail({
+            from: `"Soporte CleanTrack" <${process.env.EMAIL_USER}>`,
+            to: user.email,
+            subject: 'Restablecimiento de Contraseña',
+            html: `
+                <h3>Hola ${user.names},</h3>
+                <p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el siguiente enlace para continuar:</p>
+                <a href="${resetLink}" style="background-color: #007bff; color: white; padding: 14px 25px; text-align: center; text-decoration: none; display: inline-block; border-radius: 5px;">Restablecer Contraseña</a>
+                <p>El enlace expirará en 1 hora.</p>
+                <p>Si no solicitaste esto, puedes ignorar este correo.</p>
+            `,
+        });
+
+        res.json({ message: 'Si tu correo está registrado, recibirás un enlace para restablecer tu contraseña.' });
+    } catch (error) {
+        console.error('Error en forgot-password:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+// ENDPOINT PARA ESTABLECER LA NUEVA CONTRASEÑA
+app.post('/api/reset-password', async (req, res) => {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+        return res.status(400).json({ message: 'El token y la nueva contraseña son requeridos.' });
+    }
+
+    try {
+        const userResult = await pool.query(
+            'SELECT * FROM users WHERE password_reset_token = $1 AND password_reset_expires > NOW()',
+            [token]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(400).json({ message: 'El token es inválido o ha expirado. Por favor, solicita uno nuevo.' });
+        }
+        const user = userResult.rows[0];
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await pool.query(
+            'UPDATE users SET password = $1, password_reset_token = NULL, password_reset_expires = NULL WHERE id = $2',
+            [hashedPassword, user.id]
+        );
+
+        res.json({ message: '¡Tu contraseña ha sido actualizada exitosamente!' });
+    } catch (error) {
+        console.error('Error en reset-password:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+app.listen(3000, () => {
+    console.log('Servidor corriendo en http://localhost:3000');
 });

@@ -199,8 +199,8 @@ const views = {
                 <button id="auto-assign-btn" type="button" class="btn btn-info text-white d-flex align-items-center">
                     <i class="bi bi-shuffle me-2"></i> Asignar Aleatoriamente
                 </button>
-                <button id="clear-assignments-btn" type="button" class="btn btn-danger d-flex align-items-center">
-                    <i class="bi bi-trash me-2"></i> Eliminar Todas
+                <button id="clear-assignments-btn" type="button" class="btn btn-warning d-flex align-items-center">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i> Reiniciar Asignaciones del Día
                 </button>
             </div>
         </div>
@@ -415,7 +415,7 @@ async function renderCleaningRecords() {
                 <tr>
                     <td>${rec.zone_name}</td>
                     <td>${rec.employee_name}</td>
-                    <td><span class="badge bg-info">${rec.cleaning_type}</span></td>
+                    <td><span class="badge bg-success">${rec.cleaning_type}</span></td>
                     <td>${new Date(rec.cleaned_at).toLocaleString()}</td>
                     <td>${evidenceButtonHTML}</td>
                     <td>${rec.observations || '-'}</td>
@@ -849,16 +849,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!button) return;
 
         if (button.matches('#auto-assign-btn')) assignZonesRandomly();
+
         if (button.matches('#clear-assignments-btn')) {
             Swal.fire({
-                title: '¿Eliminar todas las asignaciones?', text: "Esta acción no se puede deshacer.", icon: 'warning',
-                showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Sí, eliminar todo'
+                title: '¿Reiniciar Asignaciones del Día?',
+                html: "Esta acción eliminará <b>todas las tareas de asignación actuales</b>, lo que pondrá el mapa de zonas en rojo (pendiente).<br><br><b>El historial de limpieza y los reportes no se verán afectados.</b>",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                confirmButtonText: 'Sí, reiniciar día',
+                cancelButtonText: 'Cancelar'
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
+                        // La llamada al backend es la misma, porque la acción es la correcta
                         await request('/api/assignments/clear', 'DELETE');
-                        Swal.fire('¡Eliminadas!', 'Todas las asignaciones han sido eliminadas.', 'success');
-                        renderAllocations();
+                        Swal.fire('¡Reiniciado!', 'Las asignaciones han sido borradas. El mapa se ha actualizado.', 'success');
+                        renderAllocations(); // Recarga la tabla de asignaciones
+                        
+                        // Si la vista del mapa está activa, la recargamos para ver los cambios
+                        if (document.getElementById('map-container')) {
+                            renderZoneMap(1); 
+                        }
                     } catch (error) {
                         Swal.fire('Error', `No se pudo completar la operación: ${error.message}`, 'error');
                     }
