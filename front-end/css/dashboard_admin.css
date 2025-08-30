@@ -465,3 +465,249 @@ body {
     box-shadow: none;
   }
 }
+
+/* --- Estilos de la tabla --- */
+.table thead th {
+font-weight: 700;
+color: var(--riwi-dark-blue);
+border-bottom: 2px solid var(--riwi-accent-blue);
+background-color: var(--background-light);
+}
+
+.table-hover tbody tr:hover {
+background-color: rgba(0, 0, 0, 0.03);
+}
+
+.table .btn {
+border-radius: 0.5rem;
+font-weight: 600;
+transition: all 0.2s ease;
+}
+
+.table .btn-outline-primary {
+color: var(--riwi-accent-blue);
+border-color: var(--riwi-accent-blue);
+}
+
+.table .btn-outline-primary:hover {
+background-color: var(--riwi-accent-blue);
+color: var(--text-light);
+}
+
+.table .btn-outline-danger {
+color: #dc3545;
+border-color: #dc3545;
+}
+
+.table .btn-outline-danger:hover {
+background-color: #dc3545;
+color: white;
+}
+
+/* --- Estilos para los modales --- */
+.modal-content {
+border-radius: 1rem;
+border: none;
+box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+border-bottom: none;
+padding: 1.5rem 2rem 0.5rem;
+}
+
+.modal-title {
+font-weight: 700;
+color: var(--riwi-dark-blue);
+}
+
+.modal-body {
+padding: 1rem 2rem 1.5rem;
+}
+
+.modal-footer {
+border-top: none;
+padding: 0.5rem 2rem 1.5rem;
+}
+
+.form-floating > label {
+color: #6c757d;
+}
+
+.form-control:focus, .form-select:focus {
+border-color: var(--riwi-accent-blue);
+box-shadow: 0 0 0 0.25rem rgba(0, 174, 239, 0.25);
+}
+
+/* --- Estilos para las Cards de Zonas --- */
+#zonas-grid-container .card {
+transition: transform 0.3s ease;
+}
+
+#zonas-grid-container .card:hover {
+transform: translateY(-5px);
+box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Estilos para los badgets de rol/estado --- */
+.badge {
+font-size: 0.8em;
+padding: 0.5em 0.8em;
+}
+
+.badge.bg-success { background-color: #28a745 !important; }
+.badge.bg-info { background-color: var(--riwi-accent-blue) !important; }
+.badge.bg-danger { background-color: #dc3545 !important; }
+
+/* --- Estilos para el Loader --- */
+#loader-wrapper {
+background-color: rgba(244, 246, 248, 0.9);
+}
+
+.text-success { color: var(--riwi-green) !important; }
+.text-warning { color: var(--riwi-accent-blue) !important; }
+.text-info { color: var(--riwi-accent-blue) !important; }
+.text-secondary { color: var(--text-color) !important; }
+
+/* --- ESTILOS PARA EL MAPA DE ZONAS INTERACTIVO (VERSIÓN 3.2 - REFINADO) --- */
+
+#map-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1000 / 700; 
+    max-height: 75vh;
+    margin: auto;
+    background-color: #f1f1f1;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+#map-container #map-background,
+#map-container #map-overlay-container {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+}
+
+#map-container #map-background { object-fit: contain; z-index: 1; }
+#map-container #map-overlay-container { z-index: 2; }
+#map-container #map-overlay-container svg { width: 100%; height: 100%; }
+
+.zone-shape {
+    stroke-width: 4px;
+    stroke-linejoin: round;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.zone-shape.status-pendiente {
+    fill: rgba(220, 53, 69, 0.1);
+    stroke: rgba(220, 53, 69, 0.6);
+}
+
+.zone-shape.status-completado {
+    fill: rgba(25, 135, 84, 0.1);
+    stroke: rgba(25, 135, 84, 0.6);
+}
+
+g:hover .zone-shape {
+    transform: scale(1.02);
+    fill: rgba(13, 110, 253, 0.2);
+    stroke: rgba(13, 110, 253, 1);
+}
+
+.zone-info {
+    font-family: 'Manrope', sans-serif;
+    color: #0A0E29;
+    padding: 10px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    pointer-events: none; 
+}
+
+.zone-name-wrapper { align-self: flex-start; }
+.zone-name-text {
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 800;
+    font-size: 1.1em;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    display: inline-block;
+}
+
+/* ¡NUEVO! Contenedor para los detalles inferiores (status + asignado) */
+.zone-bottom-details {
+    display: flex; /* Pone los elementos en línea */
+    flex-direction: row; /* Horizontalmente */
+    gap: 10px; /* Espacio entre el estado y el asignado */
+    align-items: center;
+}
+
+/* ¡MODIFICADO! Estilos para el estado (más compacto) */
+.zone-status-wrapper {
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 3px 7px; /* Más pequeño */
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85em; /* Más pequeño */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.status-dot {
+    width: 8px; height: 8px; /* Más pequeño */
+    border-radius: 50%;
+    margin-right: 5px;
+    flex-shrink: 0;
+}
+.status-dot.status-pendiente { background-color: #dc3545; }
+.status-dot.status-completado { background-color: #198754; }
+
+/* ¡MODIFICADO! Estilos para el responsable (más compacto) */
+.zone-assigned-wrapper {
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 3px 7px; /* Más pequeño */
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.85em; /* Más pequeño */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    /* Ya no necesita margin-top */
+}
+
+/* ¡MODIFICADO! Icono del usuario más pequeño */
+.zone-assigned-wrapper i {
+    margin-right: 4px;
+    font-size: 1.1em; /* Ajusta el tamaño del ícono */
+}
+
+/* --- Estilos para las Tarjetas de Asignaciones --- */
+
+.employee-assignment-card {
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease-in-out;
+}
+
+.employee-assignment-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.employee-assignment-card .card-header {
+    background-color: #f8f9fa;
+}
+
+.employee-assignment-card .list-group-item {
+    padding-left: 0;
+    padding-right: 0;
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.employee-assignment-card .list-group-item:last-child {
+    border-bottom: none;
+}
