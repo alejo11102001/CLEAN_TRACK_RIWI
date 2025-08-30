@@ -7,18 +7,100 @@ const logoutButton = document.getElementById('logoutButton');
 // 1. PLANTILLAS HTML DE LAS VISTAS
 // ===================================================================
 const views = {
-    // ========== VISTA DASHBOARD ==========
+    // ========== VISTA DASHBOARD (ACTUALIZADA) ==========
     dashboard: `
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="mb-4">
             <h1 class="h2 fw-bold">Dashboard</h1>
+            <p class="text-muted">Resumen general del estado de limpieza.</p>
         </div>
         <div class="row g-4 mb-4">
-            <div class="col-md-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body d-flex align-items-center"><i class="bi bi-check2-circle fs-1 text-success me-3"></i><div><h5 class="card-title text-muted">Limpiezas Hoy</h5><p id="stats-limpiezas-hoy" class="card-text fs-2 fw-bold">0</p></div></div></div></div>
-            <div class="col-md-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body d-flex align-items-center"><i class="bi bi-exclamation-triangle fs-1 text-warning me-3"></i><div><h5 class="card-title text-muted">Zonas Pendientes</h5><p id="stats-zonas-pendientes" class="card-text fs-2 fw-bold">0</p></div></div></div></div>
-            <div class="col-md-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body d-flex align-items-center"><i class="bi bi-people fs-1 text-info me-3"></i><div><h5 class="card-title text-muted">Colaboradores</h5><p id="stats-colaboradores" class="card-text fs-2 fw-bold">0</p></div></div></div></div>
-            <div class="col-md-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body d-flex align-items-center"><i class="bi bi-file-earmark-text fs-1 text-secondary me-3"></i><div><h5 class="card-title text-muted">Reportes Mes</h5><p id="stats-reportes-mes" class="card-text fs-2 fw-bold">0</p></div></div></div></div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card shadow-sm h-100 border-start border-success border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title text-muted fw-normal mb-2">Limpiezas Hoy</h5>
+                                <span id="stats-limpiezas-hoy" class="h2 fw-bold text-dark">0</span>
+                            </div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-success-subtle text-success rounded-3">
+                                    <i class="bi bi-check-circle fs-3"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card shadow-sm h-100 border-start border-warning border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title text-muted fw-normal mb-2">Zonas Pendientes</h5>
+                                <span id="stats-zonas-pendientes" class="h2 fw-bold text-dark">0</span>
+                            </div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-warning-subtle text-warning rounded-3">
+                                    <i class="bi bi-hourglass-split fs-3"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card shadow-sm h-100 border-start border-info border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title text-muted fw-normal mb-2">Colaboradores</h5>
+                                <span id="stats-colaboradores" class="h2 fw-bold text-dark">0</span>
+                            </div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-info-subtle text-info rounded-3">
+                                    <i class="bi bi-person-workspace fs-3"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card shadow-sm h-100 border-start border-secondary border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title text-muted fw-normal mb-2">Limpiezas Mes</h5>
+                                <span id="stats-reportes-mes" class="h2 fw-bold text-dark">0</span>
+                            </div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-secondary-subtle text-secondary rounded-3">
+                                    <i class="bi bi-calendar-check fs-3"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="row g-4"><div class="col-lg-7"><div class="card shadow-sm"><div class="card-header fw-bold">Actividad de la Semana</div><div class="card-body"><canvas id="activityChart" height="150"></canvas></div></div></div><div class="col-lg-5"><div class="card shadow-sm"><div class="card-header fw-bold">Registros Recientes</div><ul id="lista-registros-recientes" class="list-group list-group-flush"><li class="list-group-item text-muted">Cargando...</li></ul></div></div></div>
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header fw-bold">Actividad de la Semana</div>
+                    <div class="card-body">
+                        <canvas id="activityChart" height="150"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header fw-bold">Registros Recientes</div>
+                    <ul id="lista-registros-recientes" class="list-group list-group-flush">
+                        <li class="list-group-item text-muted">Cargando...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     `,
 
     // ========== VISTA REGISTROS ==========
@@ -190,33 +272,96 @@ const views = {
 
 async function renderDashboard() {
     try {
-        const [users, zones, records] = await Promise.all([
-            request('/api/users'),
-            request('/api/zones'),
-            request('/api/cleaning-records')
+        // 1. Peticiones a los endpoints correctos del dashboard
+        const [stats, activity, recentRecords] = await Promise.all([
+            request('/api/dashboard/stats'),
+            request('/api/dashboard/activity'),
+            request('/api/dashboard/records')
         ]);
 
-        document.getElementById('stats-colaboradores').textContent = users.length;
-        document.getElementById('stats-zonas-pendientes').textContent = zones.length;
-        document.getElementById('stats-reportes-mes').textContent = records.length;
+        // 2. Poblar las tarjetas de estadísticas con datos del backend
+        document.getElementById('stats-limpiezas-hoy').textContent = stats.cleaningsToday || '0';
+        document.getElementById('stats-zonas-pendientes').textContent = stats.pendingZones || '0';
+        document.getElementById('stats-colaboradores').textContent = stats.collaborators || '0';
+        document.getElementById('stats-reportes-mes').textContent = stats.cleaningsMonth || '0';
 
+        // 3. Poblar la lista de registros recientes
         const recentList = document.getElementById('lista-registros-recientes');
-        recentList.innerHTML = '';
+        recentList.innerHTML = ''; // Limpiar la lista
 
-        if (records.length === 0) {
+        if (recentRecords.length === 0) {
             recentList.innerHTML = '<li class="list-group-item text-muted">No hay actividad reciente.</li>';
         } else {
-            records.slice(0, 5).forEach(rec => {
-                const li = document.createElement('li');
-                li.className = 'list-group-item';
-                li.textContent = `${rec.zone_name} - por ${rec.employee_name}`;
-                recentList.appendChild(li);
+            recentRecords.forEach(record => {
+                const listItem = document.createElement('li');
+                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                // Creando el contenido del item de la lista
+                listItem.innerHTML = `
+                    <div>
+                        <span class="fw-bold">${record.zone_name}</span>
+                        <small class="d-block text-muted">por ${record.names || 'N/A'}</small>
+                    </div>
+                    <small>${new Date(record.cleaned_at).toLocaleDateString()}</small>
+                `;
+                recentList.appendChild(listItem);
             });
         }
+
+        // 4. Lógica para renderizar el gráfico de actividad semanal
+        const activityChartCtx = document.getElementById('activityChart').getContext('2d');
+
+        // Mapear los días de la semana para asegurar el orden correcto
+        const weekDaysOrder = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const chartData = Array(7).fill(0);
+
+        activity.forEach(item => {
+            const dayIndex = weekDaysOrder.indexOf(item.day.trim());
+            if (dayIndex !== -1) {
+                chartData[dayIndex] = item.total;
+            }
+        });
+
+        // Comprobar si ya existe una instancia del gráfico para destruirla antes de crear una nueva
+        if (window.myActivityChart instanceof Chart) {
+            window.myActivityChart.destroy();
+        }
+
+        // Crear la nueva instancia del gráfico
+        window.myActivityChart = new Chart(activityChartCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+                datasets: [{
+                    label: 'Limpiezas por Día',
+                    data: chartData,
+                    backgroundColor: 'rgba(2, 119, 155, 0.6)',
+                    borderColor: 'rgba(2, 119, 155, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
     } catch (error) {
         console.error("Error cargando datos del dashboard:", error);
+        document.getElementById('main-content').innerHTML = `<div class="alert alert-danger">No se pudieron cargar los datos del dashboard. Error: ${error.message}</div>`;
     }
 }
+
 
 async function renderCleaningRecords() {
     const tableBody = document.getElementById('cleaningRecordsTableBody');
@@ -998,7 +1143,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 Swal.fire('Zona Ocupada', 'La zona seleccionada ya ha sido asignada.', 'error');
                 return;
             }
-            const assignmentData = { users_id: userId, zones_id: zoneId };
+            const assignmentData = {
+                users_id: userId,
+                zones_id: zoneId
+            };
             const url = editingId ? `/api/assignments/${editingId}` : '/api/assignments';
             const method = editingId ? 'PUT' : 'POST';
             await request(url, method, assignmentData);

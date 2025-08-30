@@ -860,3 +860,89 @@ app.post('/api/reports', authenticateToken, async (req, res) => {
 app.listen(3000, () => {
     console.log('Servidor corriendo en http://localhost:3000');
 });
+
+// --- ENDPOINTS ---
+// ==========================================================
+// DASHBOARD ENDPOINTS (TRANSLATED & TIMEZONE-FIXED)
+// ==========================================================
+
+// GET DASHBOARD STATS
+app.get("/api/dashboard/stats", authenticateToken, async (req, res) => {
+  try {
+    const cleaningsTodayResult = await pool.query(
+      "SELECT COUNT(*) AS total FROM cleaning WHERE DATE(cleaned_at AT TIME ZONE 'UTC') = (NOW() AT TIME ZONE 'UTC')::date"
+    );
+
+    const pendingZonesResult = await pool.query(`
+      SELECT COUNT(*) AS pending_zones
+      FROM zones z
+      WHERE NOT EXISTS (
+        SELECT 1 FROM cleaning c
+        WHERE c.zones_id = z.id
+        AND DATE(c.cleaned_at AT TIME ZONE 'UTC') = (NOW() AT TIME ZONE 'UTC')::date
+      )
+    `);
+
+    const collaboratorsResult = await pool.query(`
+      SELECT COUNT(*) AS collaborators
+      FROM employees e
+      JOIN users u ON u.id = e.users_id
+      WHERE u.is_active = TRUE
+    `);
+
+    const cleaningsMonthResult = await pool.query(`
+      SELECT COUNT(*) AS cleanings_month
+      FROM cleaning
+      WHERE DATE_TRUNC('month', cleaned_at AT TIME ZONE 'UTC') = DATE_TRUNC('month', NOW() AT TIME ZONE 'UTC')
+    `);
+
+    res.json({
+      cleaningsToday: cleaningsTodayResult.rows[0].total,
+      pendingZones: pendingZonesResult.rows[0].pending_zones,
+      collaborators: collaboratorsResult.rows[0].collaborators,
+      cleaningsMonth: cleaningsMonthResult.rows[0].cleanings_month
+    });
+  } catch (err) {
+    console.error("Error getting dashboard statistics:", err);
+    res.status(500).json({ error: "Error getting statistics" });
+  }
+});
+
+// GET WEEKLY ACTIVITY
+app.get("/api/dashboard/activity", authenticateToken, async (req, res) => {
+  try {
+    const activityResult = await pool.query(`
+      SELECT
+        TO_CHAR(cleaned_at AT TIME ZONE 'UTC', 'Day') AS day,
+        COUNT(*) AS total
+      FROM
+        cleaning
+      WHERE
+        cleaned_at >= (NOW() AT TIME ZONE 'UTC') - INTERVAL '7 days'
+      GROUP BY
+        day
+    `);
+    res.json(activityResult.rows);
+  } catch (err) {
+    console.error("Error getting weekly activity:", err);
+    res.status(500).json({ error: "Error getting weekly activity" });
+  }
+});
+
+// GET RECENT RECORDS
+app.get("/api/dashboard/records", authenticateToken, async (req, res) => {
+  try {
+    const recordsResult = await pool.query(`
+      SELECT c.id, u.names, z.name AS zone_name, c.cleaned_at, c.status
+      FROM cleaning c
+      LEFT JOIN users u ON c.users_id = u.id
+      JOIN zones z ON c.zones_id = z.id
+      ORDER BY c.cleaned_at DESC
+      LIMIT 5
+    `);
+    res.json(recordsResult.rows);
+  } catch (err) {
+    console.error("Error getting recent records:", err);
+    res.status(500).json({ error: "Error getting recent records" });
+  }
+});
