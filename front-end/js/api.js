@@ -34,7 +34,7 @@ const request = async (endpoint, method = 'GET', body = null) => {
 };
 
 // Función específica para subir archivos (usa FormData)
-const requestWithFile = async (endpoint, formData) => {
+const requestWithFile = async (endpoint, formData, method = 'POST') => {
     const headers = {};
     const token = getToken();
     if (token) {
@@ -43,7 +43,7 @@ const requestWithFile = async (endpoint, formData) => {
 
     try {
         const response = await fetch(`http://localhost:3000${endpoint}`, {
-            method: 'POST',
+            method,   // 👈 Ahora usa el que le pases
             headers,
             body: formData
         });
@@ -57,5 +57,6 @@ const requestWithFile = async (endpoint, formData) => {
         throw error;
     }
 };
+
 
 export { request, requestWithFile };

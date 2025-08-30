@@ -80,11 +80,8 @@
                     <strong id="admin-name-display">Cargando...</strong>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
-                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalMiPerfil">Mi
-                            Perfil</a></li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" id="openProfileModalBtn" data-bs-target="#modalMiPerfil">Mi Perfil</a></li>
+                    <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" id="logoutButton">Cerrar Sesión</a></li>
                 </ul>
             </div>
@@ -151,8 +148,8 @@
                             </div>
                             <div class="form-floating mb-3">
                                 <select class="form-select" id="estadoUsuario">
-                                    <option value="true">Activo</option>
-                                    <option value="false">Inactivo</option>
+                                    <option value="Activo">Activo</option>
+                                    <option value="Inactivo">Inactivo</option>
                                 </select>
                                 <label for="estadoUsuario">Estado del Empleado</label>
                             </div>
@@ -182,33 +179,28 @@
                     <h5 class="modal-title" id="modalNuevaZonaLabel">Crear Nueva Zona</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <form id="formNuevaZona">
-                        <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="nombreZona" placeholder="Nombre de la zona"
-                                required>
-                            <label for="nombreZona">Nombre de la zona (Ej: Baño Hombres P1)</label>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <input type="number" class="form-control" id="pisoZona" placeholder="Piso" required>
-                            <label for="pisoZona">Piso</label>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="qrIdentifier" placeholder="Identificador QR"
-                                required>
-                            <label for="qrIdentifier">Identificador para QR (Ej: ZONA-01-PISO1)</label>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <textarea class="form-control" placeholder="Añade una descripción" id="descripcionZona"
-                                style="height: 100px"></textarea>
-                            <label for="descripcionZona">Descripción (opcional)</label>
-                        </div>
-                        <div class="mb-3">
-                            <label for="fotoZona" class="form-label">Foto de referencia (opcional)</label>
-                            <input class="form-control" type="file" id="fotoZona" accept="image/*">
-                        </div>
-                    </form>
-                </div>
+                <div class="modal-body"><form id="formNuevaZona" enctype="multipart/form-data">
+                    <div class="form-floating mb-3">
+                        <input type="text" name="name" class="form-control" id="nombreZona" placeholder="Nombre de la zona" required>
+                        <label for="nombreZona">Nombre de la zona (Ej: Baño Hombres P1)</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="number" name="flats" class="form-control" id="pisoZona" placeholder="Piso" required>
+                        <label for="pisoZona">Piso</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="text" name="qr_identifier" class="form-control" id="qrIdentifier" placeholder="Identificador QR" required>
+                        <label for="qrIdentifier">Identificador para QR (Ej: ZONA-01-PISO1)</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <textarea class="form-control" name="description" placeholder="Añade una descripción" id="descripcionZona" style="height: 100px"></textarea>
+                        <label for="descripcionZona">Descripción (opcional)</label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fotoZona" class="form-label">Foto de referencia (opcional)</label>
+                        <input class="form-control" type="file" name="photo" id="fotoZona" accept="image/*">
+                    </div>
+                </form></div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" form="formNuevaZona" class="btn btn-riwi-primary">Guardar Zona</button>
@@ -319,7 +311,19 @@
             </div>
         </div>
     </div>
-
+    <div class="modal fade" id="evidenceModal" tabindex="-1" aria-labelledby="evidenceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="evidenceModalLabel">Evidencia de Limpieza</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" src="" class="img-fluid rounded" alt="Evidencia de limpieza">
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>

@@ -148,3 +148,16 @@ body {
     40% { transform: translateY(-20px); }
     60% { transform: translateY(-10px); }
 }
+
+.card-zone .zone-image {
+    height: 150px;
+    object-fit: cover;
+}
+
+.card-zone .zone-image-placeholder {
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+}
