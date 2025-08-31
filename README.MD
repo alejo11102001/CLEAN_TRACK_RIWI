@@ -184,6 +184,19 @@ Si todo está bien, verás el mensaje: `Servidor corriendo en http://localhost:3
 4.  Esto abrirá tu aplicación en el navegador, generalmente en `http://127.0.0.1:5500`.
 
 ---
+## 🧑‍💻 Credenciales de Ejemplo
+
+Puedes usar las siguientes credenciales para iniciar sesión en la aplicación.
+
+### Administrador
+*   **Usuario:** `diego.zuluagaye@amigo.edu.co`
+*   **Contraseña:** `Diego12345@`
+
+### Empleado
+*   **Usuario:** `jerorrpo@gmail.com`
+*   **Contraseña:** `jero12345`
+
+---
 
 # ☁️ Despliegue
 
