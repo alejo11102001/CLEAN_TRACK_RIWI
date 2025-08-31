@@ -36,41 +36,24 @@ Perfil de Usuario: Visualización de su información personal y de trabajo.
 
 ## 🛠️ Tecnologías Utilizadas
 
-Frontend:
+La aplicación utiliza un conjunto de tecnologías modernas y eficientes, seleccionadas para construir una solución robusta, escalable y segura.
 
-HTML5
+| Capa | Tecnología | Propósito en el Proyecto |
+| :--- | :--- | :--- |
+| **Frontend** | **HTML5, CSS3 y JavaScript (ES6+)** | Pilares del desarrollo web para la estructura, diseño y lógica interactiva del cliente. |
+| | **Bootstrap 5** | Acelera el desarrollo de la interfaz de usuario con un diseño responsivo y mobile-first. |
+| | **SweetAlert2** | Proporciona notificaciones y alertas modales atractivas y personalizadas para el usuario. |
+| | **Chart.js** | Visualiza métricas clave del sistema mediante gráficos interactivos en el dashboard de administrador. |
+| | **QRCode.js** | Permite la generación dinámica de códigos QR para cada zona de limpieza. |
+| **Backend** | **Node.js con Express.js** | Entorno de ejecución y framework para construir una API RESTful de alto rendimiento. |
+| | **JWT (JSON Web Tokens)** | Gestiona la autenticación segura y sin estado para proteger las rutas de la API. |
+| | **bcrypt** | Hashea de forma segura las contraseñas de los usuarios para garantizar que nunca se almacenen en texto plano. |
+| | **Multer y Multer-S3** | Se utilizan en conjunto para procesar la subida de archivos y almacenarlos directamente en el servicio de nube de AWS S3. |
+| | **Nodemailer** | Se encarga del envío de correos electrónicos transaccionales, como los de recuperación de contraseña. |
+| **Base de Datos y<br>Almacenamiento** | **PostgreSQL** | Es el sistema de gestión de base de datos relacional para el almacenamiento estructurado y persistente de toda la información. |
+| | **AWS S3** | Servicio de almacenamiento de objetos en la nube, optimizado para guardar las fotos de evidencia y de zonas, manteniendo el servidor ligero y escalable. |
 
-CSS3
-
-JavaScript (ES6+ Modules)
-
-Bootstrap 5 para el diseño responsivo.
-
-SweetAlert2 para notificaciones y alertas.
-
-Chart.js para la visualización de datos en el dashboard.
-
-QRCode.js para la generación de códigos QR.
-
-Backend:
-
-Node.js con Express.js para la API REST.
-
-PostgreSQL como base de datos relacional.
-
-JWT (JSON Web Tokens) para la autenticación y seguridad de rutas.
-
-bcrypt para el hasheo seguro de contraseñas.
-
-Multer y Multer-S3 para la gestión de subida de archivos.
-
-Nodemailer para el envío de correos (recuperación de contraseña).
-
-Base de Datos y Almacenamiento:
-
-PostgreSQL para el almacenamiento de datos.
-
-AWS S3 (Amazon Web Services) para el almacenamiento de imágenes de evidencia y zonas.
+---
 
 ### 📂 Estructura del Proyecto
 Aquí tienes una visión general de la estructura de carpetas y archivos para entender cómo se organiza el proyecto.
