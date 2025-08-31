@@ -72,6 +72,41 @@ PostgreSQL para el almacenamiento de datos.
 
 AWS S3 (Amazon Web Services) para el almacenamiento de imágenes de evidencia y zonas.
 
+### 📂 Estructura del Proyecto
+Aquí tienes una visión general de la estructura de carpetas y archivos para entender cómo se organiza el proyecto.
+
+├── back-end/
+│   ├── node_modules/                 # Dependencias del backend (Node.js)
+│   ├── uploads/                      # Directorio para subir las fotos de evidencia
+│   ├── .env                          # Variables de entorno para la configuración
+│   ├── app.js                        # Lógica principal del servidor Express
+│   ├── db.js                         # Configuración y conexión a PostgreSQL
+│   ├── package-lock.json             # Bloqueo de las versiones de dependencias
+│   └── package.json                  # Lista de dependencias del backend
+├── data/
+│   └── db.sql                        # Archivo SQL con el esquema de la base de datos
+├── front-end/
+│   ├── css/                          # Hojas de estilo CSS
+│   │   ├── dashboard_admin.css
+│   │   ├── styles.css
+│   │   └── zonas_employee.css
+│   ├── img/                          # Imágenes y activos del frontend
+│   ├── js/                           # Archivos JavaScript
+│   │   ├── api.js                    # Lógica para las llamadas a la API
+│   │   ├── auth-controller.js        # Lógica para la autenticación
+│   │   ├── main.js                   # Lógica del dashboard del administrador
+│   │   ├── reset-password.js         # Lógica para restablecer la contraseña
+│   │   ├── service-worker.js         # Service Worker para la funcionalidad offline
+│   │   └── zones_employee.js         # Lógica del portal del empleado
+│   ├── change_password.html          # Página para cambiar la contraseña
+│   ├── dashboard_admin.html          # Panel principal del administrador
+│   ├── index.html                    # Página de inicio (login)
+│   └── zones_employee.html           # Panel del empleado
+├── .gitignore                        # Archivo para ignorar directorios y archivos de Git
+├── README.md                         # Descripción del proyecto
+├── manifest.json                     # Manifiesto de la aplicación web (PWA)
+└── package.json                      # Lista de dependencias del proyecto (root)
+
 ## 🚀 Guía de Instalación y Puesta en Marcha
 
 Sigue estos pasos para clonar, configurar y ejecutar el proyecto en tu entorno local.
