@@ -209,10 +209,9 @@ Puedes acceder a la versión en producción aquí:
 *   Diego Zuluaga
 
 *coders Van-rossum*
+## ¡Gracias por revisar este proyecto!
 
-# ¡Gracias por revisar este proyecto!
-
-#README IN ENGLISH
+# README IN ENGLISH
 
 # Clean Track RIWI - Cleaning Management System
 
