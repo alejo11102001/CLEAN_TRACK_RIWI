@@ -211,3 +211,215 @@ Puedes acceder a la versión en producción aquí:
 *coders Van-rossum*
 
 # ¡Gracias por revisar este proyecto!
+
+#README IN ENGLISH
+
+# Clean Track RIWI - Cleaning Management System
+
+Clean Track RIWI is a comprehensive web application designed for the efficient management and monitoring of cleaning tasks in facilities. The platform features two main roles: Administrators, who manage zones, users, and assignments; and Employees, who log their cleaning activities through a QR validation system.
+
+The system provides a real-time monitor of zone statuses, a productivity reporting system, and a complete history of all activities, ensuring full control over the operation.
+
+## ✨ Main Features
+
+The system is designed with two main roles, each with a specific set of tools to maximize efficiency and control.
+
+### For Administrators:
+
+*   **Interactive Dashboard:** Real-time visualization of key statistics, including daily cleanings, pending zones, and active employees.
+*   **Zone Management (CRUD):** Allows creating, editing, and deleting cleaning zones, assigning each a unique QR identifier and a reference photo for easy identification.
+*   **User Management (CRUD):** Manage users with "Admin" or "Employee" roles. You can create, edit, delete, and manage their status (Active/Inactive).
+*   **Assignment Management:** Assign zones to employees manually or use a **random assignment** feature to distribute tasks equitably.
+*   **Real-Time Zone Monitoring:** An interactive map that displays the status of each zone (Green: Clean, Red: Pending) with a configurable time limit (default is 6 hours) for status reset.
+*   **Report Generator:** A powerful filtering system by date and report type that allows analyzing productivity per employee or consulting the overall cleaning history.
+*   **QR Code Generator:** Generates and prints unique QR codes for each zone, ready to be placed physically on-site.
+
+### For Employees:
+
+*   **Personalized Dashboard:** A clear and concise view of the zones assigned for the workday, showing the current status of each.
+*   **Secure Cleaning Log:** A validation system using QR scanning to ensure the employee is physically in the correct zone before logging a cleaning.
+*   **Evidence Upload:** Allows capturing and uploading a photograph as irrefutable proof of the work done. Images are stored securely in the cloud.
+*   **User Profile:** Access to personal and work information registered in the system.
+
+## 🛠️ Technologies Used
+
+The application uses a set of modern and efficient technologies, selected to build a robust, scalable, and secure solution.
+
+| Layer | Technology | Purpose in the Project |
+| :--- | :--- | :--- |
+| **Frontend** | **HTML5, CSS3 & JavaScript (ES6+)** | The pillars of web development for structure, design, and interactive client-side logic. |
+| | **Bootstrap 5** | Accelerates UI development with a responsive and mobile-first design. |
+| | **SweetAlert2** | Provides attractive and customized modal notifications and alerts for the user. |
+| | **Chart.js** | Visualizes key system metrics through interactive charts on the admin dashboard. |
+| | **QRCode.js** | Enables the dynamic generation of QR codes for each cleaning zone. |
+| **Backend** | **Node.js with Express.js** | Runtime environment and framework for building a high-performance RESTful API. |
+| | **JWT (JSON Web Tokens)** | Manages secure, stateless authentication to protect API routes. |
+| | **bcrypt** | Securely hashes user passwords to ensure they are never stored in plain text. |
+| | **Multer and Multer-S3** | Used together to process file uploads and store them directly in the AWS S3 cloud service. |
+| | **Nodemailer** | Handles the sending of transactional emails, such as password recovery emails. |
+| **Database &<br>Storage** | **PostgreSQL** | The relational database management system for structured and persistent storage of all information. |
+| | **AWS S3** | Cloud object storage service, optimized for saving evidence and zone photos, keeping the server light and scalable. |
+
+---
+
+## 📂 Project Structure
+Here is an overview of the folder and file structure to understand how the project is organized.
+```
+├── back-end/
+│   ├── node_modules/                 # Backend dependencies (Node.js)
+│   ├── .env                          # Environment variables for configuration
+│   ├── app.js                        # Main Express server logic
+│   ├── db.js                         # PostgreSQL configuration and connection
+│   ├── package-lock.json             # Locks dependency versions
+│   └── package.json                  # List of backend dependencies
+├── data/
+│   └── db.sql                        # SQL file with the database schema
+├── docs/                             # Project documentation
+│   └── MER/                          # Entity-Relationship Model
+│       └── (Images)                  # ERD images
+├── front-end/
+│   ├── css/                          # CSS stylesheets
+│   │   ├── dashboard_admin.css
+│   │   ├── styles.css
+│   │   └── zonas_employee.css
+│   ├── html/                         # HTML pages of the site
+│   │   ├── change_password.html      # Page to change password
+│   │   ├── dashboard_admin.html      # Admin's main dashboard
+│   │   ├── index.html                # Home page (login)
+│   │   └── zones_employee.html       # Employee's dashboard
+│   ├── img/                          # Frontend images and assets
+│   └── js/                           # JavaScript files
+│       ├── api.js                    # Logic for API calls
+│       ├── auth-controller.js        # Authentication logic
+│       ├── main.js                   # Admin dashboard logic
+│       ├── reset-password.js         # Password reset logic
+│       ├── service-worker.js         # Service Worker for offline functionality
+│       └── zones_employee.js         # Employee portal logic
+├── .gitignore                        # File to ignore Git directories and files
+├── README.md                         # Project description
+├── manifest.json                     # Web application manifest (PWA)
+└── package.json                      # Project dependencies list (root)
+```
+
+## 🚀 Installation and Setup Guide
+
+Follow these steps to clone, configure, and run the project in your local environment.
+
+### 1. Prerequisites
+
+Make sure you have the following software installed on your machine:
+
+*   **Node.js** (version 18.x or higher)
+*   **npm** (usually installed with Node.js)
+*   A **PostgreSQL** client like DBeaver or pgAdmin.
+*   **Git** to clone the repository.
+*   An **AWS** account to create an S3 bucket.
+*   A **Gmail** account with "2-Step Verification" enabled to generate an app password.
+
+### 2. Download the Project
+
+Clone the repository from GitHub to your local machine:
+
+```bash
+git clone https://github.com/alejo11102001/CLEAN_TRACK_RIWI
+cd CLEAN_TRACK_RIWI
+```
+
+### 3. Backend Configuration
+
+Navigate to the backend folder:
+
+```bash
+cd back-end
+```
+
+Install all project dependencies:
+
+```bash
+npm install
+```
+
+Create a `.env` file in the root of the `back-end` folder and add the following variables. This file is crucial for storing your secret keys.
+
+```env
+### PostgreSQL Database Configuration
+PGHOST=168.119.183.3
+PGPORT=5432
+PGDATABASE=clean_track_riwi
+PGUSER=root
+PGPASSWORD=s7cq453mt2jnicTaQXKT
+```
+
+### 4. Database Setup
+
+1.  Open your PostgreSQL client (DBeaver/pgAdmin).
+2.  Create a new database with the name you specified in your `.env` file (e.g., `clean_track_riwi`).
+3.  Run the `db.sql` script to create all the necessary tables, types, and relationships.
+
+### 5. Running the Application
+
+You need to start both the backend and frontend servers.
+
+#### Start the Backend:
+
+Open a terminal in the `back-end` folder and run:
+
+```bash
+node app.js
+```
+
+If everything is correct, you will see the message: `Server running on http://localhost:3000`.
+
+#### Start the Frontend:
+
+1.  Open the `front-end` folder in Visual Studio Code.
+2.  Make sure you have the **"Live Server"** extension installed.
+3.  Right-click on your `index.html` file and select **"Open with Live Server"**.
+4.  This will open your application in the browser, usually at `http://127.0.0.1:5500`.
+
+---
+## 🧑‍💻 Sample Credentials
+
+You can use the following credentials to log in to the application.
+
+### Administrator
+*   **User:** `diego.zuluagaye@amigo.edu.co`
+*   **Password:** `Diego12345@`
+
+### Employee
+*   **User:** `jerorrpo@gmail.com`
+*   **Password:** `jero12345`
+
+---
+
+# ☁️ Deployment
+
+The application is designed to be deployed on modern services with free tiers.
+
+*   **Database (PostgreSQL):** [Neon](https://neon.tech/) is recommended.
+*   **Backend (Node.js API):** [Render](https://render.com/) is recommended. Don't forget to set all environment variables in the Render dashboard.
+*   **Frontend (Static Site):** [Netlify](https://www.netlify.com/) or [Vercel](https://vercel.com/) are recommended.
+
+## Post-deployment Steps:
+
+1.  Update the `API_BASE_URL` variable in your `front-end/js/api.js` file to point to your backend URL on Render.
+2.  Update the `resetLink` variable in your `app.js` to point to your frontend URL on Netlify.
+3.  Update the CORS policy of your S3 bucket to allow requests from your new Netlify URL.
+
+---
+## 🔗 Deployment Link
+
+You can access the production version here:
+**[https://vocal-peony-3f0286.netlify.app/](https://vocal-peony-3f0286.netlify.app/)**
+
+# ✒️ Authors
+
+*   Abrahan Taborda
+*   Jeronimo Rodriguez
+*   Emmanuel Jaramillo
+*   Luis Ducuara
+*   Diego Zuluaga
+
+*coders Van-rossum*
+
+# Thank you for reviewing this project!
