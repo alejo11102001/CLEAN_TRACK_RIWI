@@ -6,34 +6,26 @@ El sistema proporciona un monitor en tiempo real del estado de las zonas, un sis
 
 
 
-# ✨ Características Principales
+## ✨ Características Principales
 
- ## Para Administradores:
+El sistema está diseñado con dos roles principales, cada uno con un conjunto de herramientas específicas para maximizar la eficiencia y el control.
 
-Dashboard Interactivo: Visualización de estadísticas clave en tiempo real (limpiezas del día, zonas pendientes, colaboradores activos).
+### Para Administradores:
 
-Gestión de Zonas (CRUD): Crear, editar y eliminar zonas de limpieza, asignando un identificador QR único y una foto de referencia.
+*   **Dashboard Interactivo:** Visualización de estadísticas clave en tiempo real, incluyendo limpiezas del día, zonas pendientes y colaboradores activos.
+*   **Gestión de Zonas (CRUD):** Permite crear, editar y eliminar zonas de limpieza, asignando a cada una un identificador QR único y una foto de referencia para fácil identificación.
+*   **Gestión de Usuarios (CRUD):** Administra usuarios con roles de "Admin" o "Empleado". Puedes crear, editar, eliminar y gestionar su estado (Activo/Inactivo).
+*   **Gestión de Asignaciones:** Asigna zonas a empleados de forma manual o utiliza una función de **asignación aleatoria** para distribuir las tareas equitativamente.
+*   **Monitor de Zonas en Tiempo Real:** Un mapa interactivo que muestra el estado de cada zona (Verde: Limpio, Rojo: Pendiente) con un límite de tiempo configurable (por defecto 6 horas) para el reinicio del estado.
+*   **Generador de Reportes:** Un potente sistema de filtrado por fechas y tipo de reporte que permite analizar la productividad por empleado o consultar el historial general de limpieza.
+*   **Generador de Códigos QR:** Genera e imprime los códigos QR únicos para cada zona, listos para ser colocados físicamente en el lugar.
 
-Gestión de Usuarios (CRUD): Crear, editar y eliminar usuarios con roles de "Admin" o "Empleado", y gestionar su estado (Activo/Inactivo).
+### Para Empleados:
 
-Gestión de Asignaciones: Asignar manualmente zonas a empleados o usar una función de asignación aleatoria para distribuir las tareas equitativamente.
-
-Monitor de Zonas en Tiempo Real: Un mapa interactivo que muestra el estado de cada zona (Verde: Limpio, Rojo: Pendiente) con un límite de tiempo configurable (6 horas).
-
-Generador de Reportes: Sistema de filtrado por fechas y tipo de reporte para analizar la productividad por empleado o el historial general.
-
-Generador de Códigos QR: Genera y permite imprimir los códigos QR únicos para cada zona.
-
-## Para Empleados:
-
-Dashboard Personalizado: Visualización de las zonas asignadas para el día, con su estado actual.
-
-Registro de Limpieza Seguro: Sistema de validación mediante escaneo de QR para confirmar que el empleado está en la zona correcta.
-
-Subida de Evidencias: Permite tomar una foto como prueba del trabajo realizado, la cual se almacena de forma segura en la nube.
-
-Perfil de Usuario: Visualización de su información personal y de trabajo.
-
+*   **Dashboard Personalizado:** Una vista clara y concisa de las zonas asignadas para la jornada laboral, mostrando el estado actual de cada una.
+*   **Registro de Limpieza Seguro:** Un sistema de validación mediante escaneo de QR que garantiza que el empleado se encuentre físicamente en la zona correcta antes de registrar una limpieza.
+*   **Subida de Evidencias:** Permite capturar y subir una fotografía como prueba irrefutable del trabajo realizado. Las imágenes se almacenan de forma segura en la nube.
+*   **Perfil de Usuario:** Acceso a la información personal y de trabajo registrada en el sistema.
 ## 🛠️ Tecnologías Utilizadas
 
 La aplicación utiliza un conjunto de tecnologías modernas y eficientes, seleccionadas para construir una solución robusta, escalable y segura.
