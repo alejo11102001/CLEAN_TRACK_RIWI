@@ -114,7 +114,7 @@ Clona el repositorio desde GitHub a tu máquina local:
 
 ```bash
 git clone https://github.com/alejo11102001/CLEAN_TRACK_RIWI
-cd tu-repositorio
+cd CLEAN_TRACK_RIWI
 ```
 
 # 3. Configuración del Backend
@@ -129,6 +129,7 @@ Instala todas las dependencias del proyecto:
 
 ```bash
 npm install
+npm i
 ```
 
 Crea un archivo `.env` en la raíz de la carpeta `back-end` y añade las siguientes variables. Este archivo es crucial para guardar tus claves secretas.
