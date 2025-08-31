@@ -135,25 +135,12 @@ Crea un archivo `.env` en la raíz de la carpeta `back-end` y añade las siguien
 
 ```env
 # Configuración de la Base de Datos PostgreSQL
-DB_USER=postgres
-DB_HOST=localhost
-DB_DATABASE=clean_track_riwi
-DB_PASSWORD=tu_contraseña_de_postgres
-DB_PORT=5432
+PGHOST=168.119.183.3
+PGPORT=5432
+PGDATABASE=clean_track_riwi
+PGUSER=root
+PGPASSWORD=s7cq453mt2jnicTaQXKT
 
-# Clave Secreta para JSON Web Tokens (JWT)
-# Genera una clave aleatoria larga (ej: desde https://randomkeygen.com/)
-JWT_SECRET=tu_clave_secreta_larga_y_aleatoria_aqui
-
-# Credenciales de AWS S3 para almacenamiento de imágenes
-AWS_ACCESS_KEY_ID=tu_aws_access_key_id
-AWS_SECRET_ACCESS_KEY=tu_aws_secret_access_key
-AWS_S3_BUCKET_NAME=el_nombre_unico_de_tu_bucket_s3
-AWS_REGION=la_region_de_tu_bucket # ej: us-east-1
-
-# Credenciales de Gmail para enviar correos (usa una Contraseña de Aplicación)
-EMAIL_USER=tu_correo@gmail.com
-EMAIL_PASS=tu_contraseña_de_aplicacion_de_16_caracteres
 ```
 
 # 4. Configuración de la Base de Datos
@@ -180,7 +167,7 @@ Si todo está bien, verás el mensaje: `Servidor corriendo en http://localhost:3
 
 1.  Abre la carpeta `front-end` en Visual Studio Code.
 2.  Asegúrate de tener la extensión **"Live Server"** instalada.
-3.  Haz clic derecho en tu archivo `index.html` (o el de login) y selecciona **"Open with Live Server"**.
+3.  Haz clic derecho en tu archivo `index.html`y selecciona **"Open with Live Server"**.
 4.  Esto abrirá tu aplicación en el navegador, generalmente en `http://127.0.0.1:5500`.
 
 ---
