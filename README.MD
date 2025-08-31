@@ -26,6 +26,7 @@ El sistema está diseñado con dos roles principales, cada uno con un conjunto d
 *   **Registro de Limpieza Seguro:** Un sistema de validación mediante escaneo de QR que garantiza que el empleado se encuentre físicamente en la zona correcta antes de registrar una limpieza.
 *   **Subida de Evidencias:** Permite capturar y subir una fotografía como prueba irrefutable del trabajo realizado. Las imágenes se almacenan de forma segura en la nube.
 *   **Perfil de Usuario:** Acceso a la información personal y de trabajo registrada en el sistema.
+
 ## 🛠️ Tecnologías Utilizadas
 
 La aplicación utiliza un conjunto de tecnologías modernas y eficientes, seleccionadas para construir una solución robusta, escalable y segura.
@@ -47,7 +48,7 @@ La aplicación utiliza un conjunto de tecnologías modernas y eficientes, selecc
 
 ---
 
-### 📂 Estructura del Proyecto
+## 📂 Estructura del Proyecto
 Aquí tienes una visión general de la estructura de carpetas y archivos para entender cómo se organiza el proyecto.
 ```
 ├── back-end/
@@ -85,6 +86,7 @@ Aquí tienes una visión general de la estructura de carpetas y archivos para en
 ├── manifest.json                     # Manifiesto de la aplicación web (PWA)
 └── package.json                      # Lista de dependencias del proyecto (root)
 ```
+
 ## 🚀 Guía de Instalación y Puesta en Marcha
 
 Sigue estos pasos para clonar, configurar y ejecutar el proyecto en tu entorno local.
