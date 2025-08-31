@@ -74,7 +74,7 @@ AWS S3 (Amazon Web Services) para el almacenamiento de imágenes de evidencia y 
 
 ### 📂 Estructura del Proyecto
 Aquí tienes una visión general de la estructura de carpetas y archivos para entender cómo se organiza el proyecto.
-
+```
 ├── back-end/
 │   ├── node_modules/                 # Dependencias del backend (Node.js)
 │   ├── uploads/                      # Directorio para subir las fotos de evidencia
@@ -106,7 +106,7 @@ Aquí tienes una visión general de la estructura de carpetas y archivos para en
 ├── README.md                         # Descripción del proyecto
 ├── manifest.json                     # Manifiesto de la aplicación web (PWA)
 └── package.json                      # Lista de dependencias del proyecto (root)
-
+```
 ## 🚀 Guía de Instalación y Puesta en Marcha
 
 Sigue estos pasos para clonar, configurar y ejecutar el proyecto en tu entorno local.
