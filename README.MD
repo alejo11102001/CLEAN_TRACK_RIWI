@@ -170,7 +170,7 @@ Abre tu cliente de PostgreSQL (DBeaver/pgAdmin).
 
 Crea una nueva base de datos con el nombre que especificaste en tu archivo .env (ej: cleantrack_db).
 
-Ejecuta el script SQL schema.sql (que puedes generar desde DBeaver con "Generar DDL") para crear todas las tablas, tipos y relaciones necesarias.
+Ejecuta el script SQL db.sql (que puedes generar desde DBeaver con "Generar DDL") para crear todas las tablas, tipos y relaciones necesarias.
 
 # 5. Iniciar la Aplicación
 
