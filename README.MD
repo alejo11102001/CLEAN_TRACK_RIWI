@@ -97,162 +97,118 @@ Aquí tienes una visión general de la estructura de carpetas y archivos para en
 
 Sigue estos pasos para clonar, configurar y ejecutar el proyecto en tu entorno local.
 
-
-
 # 1. Prerrequisitos
 
 Asegúrate de tener instalado el siguiente software en tu máquina:
 
-
-
-Node.js (versión 18.x o superior)
-
-npm (generalmente se instala con Node.js)
-
-Un cliente de PostgreSQL como DBeaver o pgAdmin.
-
-Git para clonar el repositorio.
-
-Una cuenta de AWS para crear un bucket S3.
-
-Una cuenta de Gmail con la "Verificación en 2 pasos" activada para generar una contraseña de aplicación.
+*   **Node.js** (versión 18.x o superior)
+*   **npm** (generalmente se instala con Node.js)
+*   Un cliente de **PostgreSQL** como DBeaver o pgAdmin.
+*   **Git** para clonar el repositorio.
+*   Una cuenta de **AWS** para crear un bucket S3.
+*   Una cuenta de **Gmail** con la "Verificación en 2 pasos" activada para generar una contraseña de aplicación.
 
 # 2. Descarga del Proyecto
 
 Clona el repositorio desde GitHub a tu máquina local:
 
-
-
-git clone [https://github.com/alejo11102001/CLEAN_TRACK_RIWI]
-
+```bash
+git clone https://github.com/alejo11102001/CLEAN_TRACK_RIWI
 cd tu-repositorio
+```
 
 # 3. Configuración del Backend
 
 Navega a la carpeta del backend:
 
-
-
+```bash
 cd back-end
+```
 
 Instala todas las dependencias del proyecto:
 
-
-
+```bash
 npm install
+```
 
-Crea un archivo .env en la raíz de la carpeta back-end y copia el contenido de .env.example (si existe) o añade las siguientes variables. Este archivo es crucial para guardar tus claves secretas.
+Crea un archivo `.env` en la raíz de la carpeta `back-end` y añade las siguientes variables. Este archivo es crucial para guardar tus claves secretas.
 
-
-
+```env
 # Configuración de la Base de Datos PostgreSQL
-
 DB_USER=postgres
-
 DB_HOST=localhost
-
 DB_DATABASE=clean_track_riwi
-
 DB_PASSWORD=tu_contraseña_de_postgres
-
 DB_PORT=5432
 
-
-
 # Clave Secreta para JSON Web Tokens (JWT)
-
-# Genera una clave aleatoria larga (ej: desde [https://randomkeygen.com/](https://randomkeygen.com/))
-
+# Genera una clave aleatoria larga (ej: desde https://randomkeygen.com/)
 JWT_SECRET=tu_clave_secreta_larga_y_aleatoria_aqui
 
-
-
 # Credenciales de AWS S3 para almacenamiento de imágenes
-
 AWS_ACCESS_KEY_ID=tu_aws_access_key_id
-
 AWS_SECRET_ACCESS_KEY=tu_aws_secret_access_key
-
 AWS_S3_BUCKET_NAME=el_nombre_unico_de_tu_bucket_s3
-
 AWS_REGION=la_region_de_tu_bucket # ej: us-east-1
 
-
-
 # Credenciales de Gmail para enviar correos (usa una Contraseña de Aplicación)
-
 EMAIL_USER=tu_correo@gmail.com
-
 EMAIL_PASS=tu_contraseña_de_aplicacion_de_16_caracteres
+```
 
 # 4. Configuración de la Base de Datos
 
-Abre tu cliente de PostgreSQL (DBeaver/pgAdmin).
-
-Crea una nueva base de datos con el nombre que especificaste en tu archivo .env (ej: cleantrack_db).
-
-Ejecuta el script SQL db.sql (que puedes generar desde DBeaver con "Generar DDL") para crear todas las tablas, tipos y relaciones necesarias.
+1.  Abre tu cliente de PostgreSQL (DBeaver/pgAdmin).
+2.  Crea una nueva base de datos con el nombre que especificaste en tu archivo `.env` (ej: `clean_track_riwi`).
+3.  Ejecuta el script SQL `db.sql` para crear todas las tablas, tipos y relaciones necesarias.
 
 # 5. Iniciar la Aplicación
 
 Debes iniciar tanto el servidor del backend como el del frontend.
 
+### Iniciar el Backend:
 
+Abre una terminal en la carpeta `back-end` y ejecuta:
 
-Iniciar el Backend:
-
-Abre una terminal en la carpeta back-end y ejecuta:
-
-
-
+```bash
 node app.js
+```
 
-Si todo está bien, verás el mensaje: Servidor corriendo en http://localhost:3000.
+Si todo está bien, verás el mensaje: `Servidor corriendo en http://localhost:3000`.
 
-Iniciar el Frontend:
+### Iniciar el Frontend:
 
-Abre la carpeta front-end en Visual Studio Code.
+1.  Abre la carpeta `front-end` en Visual Studio Code.
+2.  Asegúrate de tener la extensión **"Live Server"** instalada.
+3.  Haz clic derecho en tu archivo `index.html` (o el de login) y selecciona **"Open with Live Server"**.
+4.  Esto abrirá tu aplicación en el navegador, generalmente en `http://127.0.0.1:5500`.
 
-Asegúrate de tener la extensión "Live Server" instalada.
-
-Haz clic derecho en tu archivo index.html (o el de login) y selecciona "Open with Live Server".
-
-Esto abrirá tu aplicación en el navegador, generalmente en http://127.0.0.1:5500.
+---
 
 # ☁️ Despliegue
 
 La aplicación está diseñada para ser desplegada en servicios modernos con capas gratuitas.
 
+*   **Base de Datos (PostgreSQL):** Se recomienda [Neon](https://neon.tech/).
+*   **Backend (Node.js API):** Se recomienda [Render](https://render.com/). No olvides configurar todas las variables de entorno en el panel de Render.
+*   **Frontend (Sitio Estático):** Se recomienda [Netlify](https://www.netlify.com/) o [Vercel](https://vercel.com/).
 
+## Pasos post-despliegue:
 
-Base de Datos (PostgreSQL): Se recomienda Neon.
+1.  Actualiza la variable `API_BASE_URL` en tu archivo `front-end/js/api.js` para que apunte a la URL de tu backend en Render.
+2.  Actualiza la variable `resetLink` en tu `app.js` para que apunte a la URL de tu frontend en Netlify.
+3.  Actualiza la política de CORS de tu bucket S3 para permitir peticiones desde tu nueva URL de Netlify.
 
-Backend (Node.js API): Se recomienda Render. No olvides configurar todas las variables de entorno en el panel de Render.
-
-Frontend (Sitio Estático): Se recomienda Netlify o Vercel.
-
-Pasos post-despliegue:
-
-
-
-Actualiza la variable API_BASE_URL en tu archivo front-end/js/api.js para que apunte a la URL de tu backend en Render.
-
-Actualiza la variable resetLink en tu app.js para que apunte a la URL de tu frontend en Netlify.
-
-Actualiza la política de CORS de tu bucket S3 para permitir peticiones desde tu nueva URL de Netlify.
+---
 
 # ✒️ Autores
 
-Abrahan Taborda.
+*   Abrahan Taborda
+*   Jeronimo Rodriguez
+*   Emmanuel Jaramillo
+*   Luis Ducuara
+*   Diego Zuluaga
 
-Jeronimo Rodriguez.
-
-Emmanuel Jaramillo.
-
-Luis Ducuara.
-
-Diego Zuluaga.
-
-## coders Van-rossum
+*coders Van-rossum*
 
 # ¡Gracias por revisar este proyecto!
