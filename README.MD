@@ -201,6 +201,10 @@ La aplicación está diseñada para ser desplegada en servicios modernos con cap
 3.  Actualiza la política de CORS de tu bucket S3 para permitir peticiones desde tu nueva URL de Netlify.
 
 ---
+## 🔗 Link Despliegue
+
+Puedes acceder a la versión en producción aquí:
+**[https://vocal-peony-3f0286.netlify.app/](https://vocal-peony-3f0286.netlify.app/)**
 
 # ✒️ Autores
 
