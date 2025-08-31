@@ -97,7 +97,7 @@ Aquí tienes una visión general de la estructura de carpetas y archivos para en
 
 Sigue estos pasos para clonar, configurar y ejecutar el proyecto en tu entorno local.
 
-# 1. Prerrequisitos
+### 1. Prerrequisitos
 
 Asegúrate de tener instalado el siguiente software en tu máquina:
 
@@ -108,7 +108,7 @@ Asegúrate de tener instalado el siguiente software en tu máquina:
 *   Una cuenta de **AWS** para crear un bucket S3.
 *   Una cuenta de **Gmail** con la "Verificación en 2 pasos" activada para generar una contraseña de aplicación.
 
-# 2. Descarga del Proyecto
+### 2. Descarga del Proyecto
 
 Clona el repositorio desde GitHub a tu máquina local:
 
@@ -117,7 +117,7 @@ git clone https://github.com/alejo11102001/CLEAN_TRACK_RIWI
 cd CLEAN_TRACK_RIWI
 ```
 
-# 3. Configuración del Backend
+### 3. Configuración del Backend
 
 Navega a la carpeta del backend:
 
@@ -135,7 +135,7 @@ npm i
 Crea un archivo `.env` en la raíz de la carpeta `back-end` y añade las siguientes variables. Este archivo es crucial para guardar tus claves secretas.
 
 ```env
-# Configuración de la Base de Datos PostgreSQL
+### Configuración de la Base de Datos PostgreSQL
 PGHOST=168.119.183.3
 PGPORT=5432
 PGDATABASE=clean_track_riwi
@@ -144,13 +144,13 @@ PGPASSWORD=s7cq453mt2jnicTaQXKT
 
 ```
 
-# 4. Configuración de la Base de Datos
+### 4. Configuración de la Base de Datos
 
 1.  Abre tu cliente de PostgreSQL (DBeaver/pgAdmin).
 2.  Crea una nueva base de datos con el nombre que especificaste en tu archivo `.env` (ej: `clean_track_riwi`).
 3.  Ejecuta el script SQL `db.sql` para crear todas las tablas, tipos y relaciones necesarias.
 
-# 5. Iniciar la Aplicación
+### 5. Iniciar la Aplicación
 
 Debes iniciar tanto el servidor del backend como el del frontend.
 
